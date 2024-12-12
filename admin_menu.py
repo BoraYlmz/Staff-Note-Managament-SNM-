@@ -2059,8 +2059,13 @@ class SuperAdminMenu(QMainWindow):
 # ------------------------------------------------------------------------ Kişiler Paneli -------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------- Firma Paneli --------------------------------------------------------------------------------------------
-    
-    def frm_list_panel(self):
+# Bir çalışma alanındaki firmaları oluşturma listeme ,güncelleme ve silme işlemleri burdan yapılmaktadır.
+# Prensip olarak üst çalışma alanındaki firmalar tüm alt çalışma alanları tarafından kullanılmaktadır. Aynı şekilde tüm alt alanlardaki firmalar üst alanda da kullanılmaktadır.
+# Fakat alt alanların birbirleri arasındaki firmlara erişimi yoktur. Bu müdür tarafından personellerin firmarlarına gereksiz tanımlamayı azaltır.
+# Aynı şekilde ortak olması gerekenler üst alana tanımlanarak tüm alt alanlarda da kullanıma izin veriler gereksiz tanımlamalardan kaçınılır.
+# Admin olan kişi tüm herşeyi listelerken müdür kendi çalışma alanındakileri listeler ve işlem yapabilir
+  
+    def frm_list_panel(self):# Firmları Filtreleyebilecek yetkiye göre comboboxlar oluşturur
         if self.content_child_frame is not None:
             for child in self.content_child_frame.findChildren(QWidget):
                 child.deleteLater()
@@ -2082,13 +2087,11 @@ class SuperAdminMenu(QMainWindow):
             ws_list = self.common_items(QComboBox,"ws_list","Select Top Workspaces",frame_x,25)
             self.set_combobox_items(ws_list,"Self_Ws_Child",ws_list)
         
-        
-
         ws_list.currentIndexChanged.connect(self.frm_list_table)
         yatay_layout.addWidget(ws_list,0,Qt.AlignCenter)
         self.content_child_frame.setLayout(yatay_layout)
     
-    def frm_list_table(self,index):
+    def frm_list_table(self,index):#Filtrelere göre ilgili firmaları listeleyen tabloyu oluşturur
         tablo = self.content_child_frame.findChildren(QTableWidget,"frm_list")
         frame_x = self.contentpanel.width()
         frame_y = self.contentpanel.height()
@@ -2164,7 +2167,7 @@ class SuperAdminMenu(QMainWindow):
                 update_btn.clicked.connect(self.frm_item_panel)
                 tablo.setCellWidget(row,2,update_btn)
 
-    def frm_item_panel(self):
+    def frm_item_panel(self):# Güncelleme veya ekleme butonuna basıldığında o item için panel oluşturur eğer güncelleme paneli ise silme butonu da ekler
         button = self.sender()
         button_name = button.objectName()
         Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
@@ -2201,7 +2204,7 @@ class SuperAdminMenu(QMainWindow):
             doc_id = button.property("_id")
             del_btn = self.common_items(QPushButton,"del_btn","Sil",50,30)
             del_btn.setProperty("_id",doc_id)
-            del_btn.clicked.connect(self.del_frm_btn_click)
+            del_btn.clicked.connect(self.frm_process)
             btn_menu_layout.addWidget(del_btn,0,Qt.AlignRight)
 
         
@@ -2280,11 +2283,11 @@ class SuperAdminMenu(QMainWindow):
         if button_name == "update":
             update_btn = self.common_items(QPushButton,"update_btn","Güncelle",100,30)
             update_btn.setProperty("_id",doc_id)
-            update_btn.clicked.connect(self.frm_update_btn_click)
+            update_btn.clicked.connect(self.frm_process)
             Frame_layout2.addWidget(update_btn,0,Qt.AlignCenter)
         else:
             add_btn = self.common_items(QPushButton,"add_btn","Ekle",100,30)
-            add_btn.clicked.connect(self.insert_frm_btn_click)
+            add_btn.clicked.connect(self.frm_process)
             Frame_layout2.addWidget(add_btn,0,Qt.AlignCenter)
 
         Frame_layout.addLayout(Frame_layout1)
@@ -2293,82 +2296,71 @@ class SuperAdminMenu(QMainWindow):
         Frame.setLayout(Frame_layout)
         Frame.show()
 
-    def del_frm_btn_click(self):
+    def frm_process(self):
         button = self.sender()
-        doc_id = button.property("_id")  
-        prs_count = self.prsdb.count_documents({'frm_id':doc_id})
-        if prs_count == 0 :
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-
-            msg.setText("Firmayı istediğinize emin misiniz?")
-            msg.setWindowTitle("Bilgi Mesajı")
-            msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                
-            resp = msg.exec()
-
-            if resp == 1024:
-                self.frmdb.delete_one({"_id":doc_id})
-                Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
-                if Frame:
-                    Frame= Frame[0]
-                    Frame.deleteLater()
-                self.frm_list_panel()
-            
-        else:
-            self.bildirim(f"Bu çalışma alanı  {prs_count} tane kişi tanımlı olduğundan silinememektedir.")
-
-    def frm_update_btn_click(self):
-        frm_name = self.content_child_frame.findChildren(QLineEdit,"frm_name")[0].text()
-        frm_id = self.sender()
-        frm_id = frm_id.property("_id")
-        workspace_id = self.content_child_frame.findChildren(QComboBox,"ws_list")[0]
-        workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))
-
-        if frm_id > 0:
-            if frm_name.count(" ") != len(frm_name) and frm_name[0] != " ":
+        button_name = button.objectName()
+        if button_name in ("update_btn","add_btn"):
+            frm_name = self.content_child_frame.findChildren(QLineEdit,"frm_name")[0].text()
+            workspace_id = self.content_child_frame.findChildren(QComboBox,"ws_list")[0]
+            workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))
+        
+        if button_name in ("update_btn","del_btn"):
+            doc_id = button.property("_id")
+            if button_name =="del_btn":
+                prs_count = self.prsdb.count_documents({'frm_id':doc_id})
+                if prs_count == 0 : # Firmaya Kişi Ekli değilse silsin
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("Firmayı istediğinize emin misiniz?")
+                    msg.setWindowTitle("Bilgi Mesajı")
+                    msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)       
+                    resp = msg.exec()
+                    if resp == 1024:
+                        self.frmdb.delete_one({"_id":doc_id})
+                        Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.frm_list_panel()
+                else:
+                    self.bildirim(f"Bu çalışma alanı  {prs_count} tane kişi tanımlı olduğundan silinememektedir.")
+            else:
+                if self.Data_Control_Func(frm_name,"Space"):
+                    if workspace_id != 0:
+                        self.frmdb.update_one({'_id':doc_id},{'$set':{'name':frm_name,'workspace_id':workspace_id}})
+                        self.bildirim("Firma Güncellenmiştir!!") 
+                        Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.frm_list_panel()
+                    else:
+                        self.bildirim("Lütfen Çalışma alanı seçiniz!!") 
+                else:
+                    self.bildirim("Firma Adı Boş olamaz veya boşluk ile başlayamaz!!")
+        elif button_name == "add_btn":
+            if self.Data_Control_Func(frm_name,"Space"):
                 if workspace_id != 0:
-                    self.frmdb.update_one({'_id':frm_id},{'$set':{'name':frm_name,'workspace_id':workspace_id}})
-                    self.bildirim("Firma Güncellenmiştir!!") 
+                    data = {"_id":"","name":"",'workspace_id':''}
+                    data_id = self.frmdb.find().sort({"_id": -1}).limit(1).to_list()
+                    if data_id:
+                        data_id = int(data_id[0]['_id'])+1
+                    else:
+                        data_id = 1
+                    data['_id'] = data_id
+                    data['name'] = frm_name
+                    data['workspace_id'] = workspace_id
+                    self.frmdb.insert_one(data)
+                    self.bildirim(f'{frm_name} adlı firma Eklenmiştir.')
                     Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
                     if Frame:
                         Frame= Frame[0]
                         Frame.deleteLater()
                     self.frm_list_panel()
                 else:
-                   self.bildirim("Lütfen Çalışma alanı seçiniz!!") 
+                    self.bildirim('Çalışma Alanı Seçiniz!!')  
             else:
-                self.bildirim("Firma Adı Boş olamaz veya boşluk ile başlayamaz!!")
-        else:
-            self.bildirim("Lütfen Firma Seçiniz!!")
-
-    def insert_frm_btn_click(self):# Firma ekleme 
-        frm_name = self.content_child_frame.findChildren(QLineEdit,"frm_name")[0].text()
-        ws_id = self.content_child_frame.findChildren(QComboBox,"ws_list")[0]
-        ws_id = ws_id.itemData(ws_id.currentIndex())
-        if frm_name.count(" ") != len(frm_name) and frm_name[0] != " ":
-            if ws_id != 0:
-                data = {"_id":"","name":"",'workspace_id':''}
-                data_id = self.frmdb.find().sort({"_id": -1}).limit(1).to_list()
-                if data_id:
-                    data_id = int(data_id[0]['_id'])+1
-                else:
-                    data_id = 1
-                data['_id'] = data_id
-                data['name'] = frm_name
-                data['workspace_id'] = ws_id
-                self.frmdb.insert_one(data)
-                self.bildirim(f'{frm_name} adlı firma Eklenmiştir.')
-                Frame = self.content_child_frame.findChildren(QFrame,"frm_item")
-                if Frame:
-                    Frame= Frame[0]
-                    Frame.deleteLater()
-                self.frm_list_panel()
-            else:
-                self.bildirim('Çalışma Alanı Seçiniz!!')
-        else:
-            self.bildirim('Firma Adı Boş olamaz veya boşluk ile başlayamaz!!')
-
+                self.bildirim('Firma Adı Boş olamaz veya boşluk ile başlayamaz!!')
 
     def common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int):
         if widget == QLineEdit:
@@ -2431,6 +2423,14 @@ class SuperAdminMenu(QMainWindow):
                 set_combobox.addItem("Select Any Workspace",userData = -1)
                 for item in self.workspacedb.find({"parent":ws_parent}):
                     set_combobox.addItem(item["name"],userData = item['_id'])
+
+    def Data_Control_Func(self,item:QWidget,process:str):
+        match process:
+            case "Space":
+                if item.count(" ") != len(item) and item[0] != " ":
+                    return True
+                else:
+                    return False
 # ------------------------------------------------------------------------- Firma Paneli --------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------- Yetki Paneli --------------------------------------------------------------------------------------------
@@ -2727,7 +2727,7 @@ class SuperAdminMenu(QMainWindow):
 # Tıklanan Güncelle veya ekleme butonu workspace_item_panel yönlendiriyor ve butonun adına bakıyor böylelikle ekleme mi güncelleme mi onu anlıyoruz.
 # Aynı zamanda kullanıcının yetkisine bakarak güncellemedeki üst çalışma alanını listeliyor
 
-    def workspace_list_panel (self):# Çalışma Alanı Listeleme
+    def workspace_list_panel (self):# Çalışma Alanlarını Adminse hepsini müdürse kendi çalışma alanlarını listeliyor
         if self.content_child_frame is not None:
             for child in self.content_child_frame.findChildren(QWidget):
                 child.deleteLater()
@@ -2815,34 +2815,7 @@ class SuperAdminMenu(QMainWindow):
 
         self.content_child_frame.show()
     
-    def del_workspace_btn_click(self):# Çalışma Alanınıdaki seçili satırı silme
-        button = self.sender()
-        doc_id = button.property("_id")  
-        
-        user_workspace = self.usersdatadb.count_documents({'workspace_id':doc_id})
-        parent = self.workspacedb.count_documents({'parent':doc_id})
-        frm_count = self.frmdb.count_documents({'workspace_id':doc_id})
-        if user_workspace == 0 and parent == 0 and frm_count == 0:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Information)
-
-            msg.setText("Çalışma alanını silmek istediğinize emin misiniz?")
-            msg.setWindowTitle("Bilgi Mesajı")
-            msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                
-            resp = msg.exec()
-
-            if resp == 1024:
-                self.workspacedb.delete_one({"_id":doc_id})
-                Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
-                if Frame:
-                    Frame= Frame[0]
-                    Frame.deleteLater()
-                self.workspace_list_panel()
-        else:
-            self.bildirim(f"Bu çalışma alanı {user_workspace} tane çalışan, {frm_count} tane firma ve {parent} tane çalışma alanı tanımlı olduğundan silinememektedir.")
-
-    def workspace_item_panel(self):
+    def workspace_item_panel(self):# Seçilen işlem sonucu güncelleme veya ekleme paneli oluşturur eğer güncelle seçilirse silme butonu da oluşturulur
         button = self.sender()
         button_name = button.objectName()
         Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
@@ -2892,7 +2865,7 @@ class SuperAdminMenu(QMainWindow):
 
             del_btn = self.common_items(QPushButton,"del_btn","Sil",50,30)
             del_btn.setProperty("_id",doc_id)
-            del_btn.clicked.connect(self.del_workspace_btn_click)
+            del_btn.clicked.connect(self.workspace_process)
             btn_menu_layout.addWidget(del_btn,0,Qt.AlignRight)
 
         if self.user_perm == "Müdür":
@@ -2911,11 +2884,11 @@ class SuperAdminMenu(QMainWindow):
         if button_name == "update":
             update_btn = self.common_items(QPushButton,"update_btn","Güncelle",100,30)
             update_btn.setProperty("_id",doc_id)
-            update_btn.clicked.connect(self.update_workspace_btn_click)
+            update_btn.clicked.connect(self.workspace_process)
             Frame_layout2.addWidget(update_btn,0,Qt.AlignCenter)
         else:
             add_btn = self.common_items(QPushButton,"add_btn","Ekle",100,30)
-            add_btn.clicked.connect(self.insert_workspace_panel_btn_click)
+            add_btn.clicked.connect(self.workspace_process)
             Frame_layout2.addWidget(add_btn,0,Qt.AlignCenter)
         
         Frame_layout2.addSpacing(100)
@@ -2924,62 +2897,70 @@ class SuperAdminMenu(QMainWindow):
         Frame.setLayout(Frame_layout)
         Frame.show()
 
-    def update_workspace_btn_click(self):# Çalışma Alanı Güncelleme
+    def workspace_process(self):# Yapılan işleme bakar ve işler
         button = self.sender()
-        doc_id = button.property("_id")
-        workspace_name = self.content_child_frame.findChildren(QLineEdit,"ws_name")[0].text()
-        new_parent = self.content_child_frame.findChildren(QComboBox,"ws_parent")[0]
-        new_parent_id = int(new_parent.itemData(new_parent.currentIndex()))
-        
-        if workspace_name.count(" ") != len(workspace_name) and workspace_name[0] != " ":
-            if self.user_perm == "Admin":
-                self.workspacedb.update_one({'_id':doc_id},{'$set':{'name':workspace_name,'parent':new_parent_id}})
-                self.bildirim("Çalılşma Alanı Güncellenmiştir")
+        button_name = button.objectName()#Butonlara isim verdik buna göre işlemi ayırt edebiliyoruz
+        if button_name in ("update_btn","add_btn"): # eğer işlem ekleme ve güncelleme ise ortak olan bilgileri tanımlıyor
+            workspace_name = self.content_child_frame.findChildren(QLineEdit,"ws_name")[0].text()
+            new_parent = self.content_child_frame.findChildren(QComboBox,"ws_parent")[0]
+            new_parent_id = int(new_parent.itemData(new_parent.currentIndex()))
+        if button_name in ("update_btn","del_btn"): # eğer işlem güncelleme ve silme ise bunların ortak olan verisini tanımlıyor ve işlemi yapıyor
+            doc_id = button.property("_id")
+            if button_name == "update_btn":
+                if self.Data_Control_Func(workspace_name,"Space"):
+                    if self.user_perm == "Admin" or (self.user_perm == "Müdür" and new_parent_id != 0):
+                        self.workspacedb.update_one({'_id':doc_id},{'$set':{'name':workspace_name,'parent':new_parent_id}})
+                        self.bildirim("Çalılşma Alanı Güncellenmiştir")
+                        Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.workspace_list_panel()
+                    else:
+                        self.bildirim('Lütfen Üst Çalışma Alanını Düzgün seçiniz!!')
+                else:
+                    self.bildirim('Çalışma Alanı adı boş olamaz veya boşluk ile başlayamaz !!')
+            else: # Çalışma alanının altında kişi ,firma veya başka çalışma alanı eklimi kontrolü yapıyor 
+                user_workspace = self.usersdatadb.count_documents({'workspace_id':doc_id})
+                parent = self.workspacedb.count_documents({'parent':doc_id})
+                frm_count = self.frmdb.count_documents({'workspace_id':doc_id})  
+                if user_workspace == 0 and parent == 0 and frm_count == 0:
+                    msg = QMessageBox()
+                    msg.setIcon(QMessageBox.Information)
+                    msg.setText("Çalışma alanını silmek istediğinize emin misiniz?")
+                    msg.setWindowTitle("Bilgi Mesajı")
+                    msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+                    resp = msg.exec()
+                    if resp == 1024:
+                        self.workspacedb.delete_one({"_id":doc_id})
+                        Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.workspace_list_panel()
+                    else:
+                        self.bildirim(f"Bu çalışma alanı {user_workspace} tane çalışan, {frm_count} tane firma ve {parent} tane çalışma alanı tanımlı olduğundan silinememektedir.")
+        elif button_name == "add_btn":
+            if self.Data_Control_Func(workspace_name,"Space"):
+                data_id = self.workspacedb.find().sort({"_id": -1}).limit(1).to_list()
+                if data_id:
+                    data_id = int(data_id[0]['_id'])+1
+                else:
+                    data_id = 1
+                data = {'_id':None,'name':None,"parent":None} 
+                data['_id'] = data_id
+                data['name'] = str(workspace_name)
+                data['parent'] = new_parent_id
+                self.workspacedb.insert_one(data)
+                
+                self.bildirim("Çalışma Alanı Oluşturulmuştur.")
                 Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
                 if Frame:
                     Frame= Frame[0]
                     Frame.deleteLater()
                 self.workspace_list_panel()
             else:
-                if new_parent_id != 0:
-                    self.workspacedb.update_one({'_id':doc_id},{'$set':{'name':workspace_name,'parent':new_parent_id}})
-                    self.bildirim("Çalılşma Alanı Güncellenmiştir")
-                    Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
-                    if Frame:
-                        Frame= Frame[0]
-                        Frame.deleteLater()
-                    self.workspace_list_panel()
-                else:
-                    self.bildirim('Lütfen Üst Çalışma Alanını Düzgün seçiniz!!')
-            
-        else:
-            self.bildirim('Çalışma Alanı adı boş olamaz veya boşluk ile başlayamaz !!')
-    
-    def insert_workspace_panel_btn_click(self):#DataBase'e Çalışma Alanı Ekleme
-        parent_combobox = self.content_child_frame.findChildren(QComboBox,"ws_parent")[0]
-        workspace_name = self.content_child_frame.findChildren(QLineEdit,"ws_name")[0]
-        parent_id = int(parent_combobox.itemData(parent_combobox.currentIndex()))
-        if workspace_name.text().count(" ") != len(workspace_name.text()) and workspace_name.text()[0] != " ":
-            data_id = self.workspacedb.find().sort({"_id": -1}).limit(1).to_list()
-            if data_id:
-                data_id = int(data_id[0]['_id'])+1
-            else:
-                data_id = 1
-            data = {'_id':None,'name':None,"parent":None} 
-            data['_id'] = data_id
-            data['name'] = str(workspace_name.text())
-            data['parent'] = parent_id
-            self.workspacedb.insert_one(data)
-            
-            self.bildirim("Çalışma Alanı Oluşturulmuştur.")
-            Frame = self.content_child_frame.findChildren(QFrame,"ws_item")
-            if Frame:
-                Frame= Frame[0]
-                Frame.deleteLater()
-            self.workspace_list_panel()
-        else:
-            self.bildirim(f'Çalışma Alanı adı boş olamaz veya boşluk ile başlayamaz !!')
-
+                self.bildirim(f'Çalışma Alanı adı boş olamaz veya boşluk ile başlayamaz !!')
 # ----------------------------------------------------------------- WorkSpace ------------------------------------------------------------------------------------        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -3023,7 +3004,8 @@ if __name__ == "__main__":
     # if sid == None:
     #     window = SuperAdminMenu(THEME_ID,user,0,0,"Yetkisiz")
     # else:
-    #     uri = "mongodb+srv://RAW:OsR3aDAndWr1t3Us3r@osvpaneldb.kgluv.mongodb.net/"
+    #     load_dotenv(dotenv_path='db_inf.env')
+    #     uri = os.getenv('SERVER_URI')
     #     client = MongoClient(uri, tlsCAFile=certifi.where())
     #     database = client["VisitPanelDB"]
     #     userdb = database["users_data"]
@@ -3042,6 +3024,6 @@ if __name__ == "__main__":
     #     else:
     #         window = SuperAdminMenu(THEME_ID,user,0,0,"Yetkisiz")
     
-    window = SuperAdminMenu(1,"sistemdestek",1,1,"Admin")
+    window = SuperAdminMenu(1,"sistemdestek",1,1,"Müdür")
     window.show()
     sys.exit(app.exec())
