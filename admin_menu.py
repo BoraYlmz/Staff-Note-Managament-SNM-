@@ -227,17 +227,17 @@ class SuperAdminMenu(QMainWindow):
 
                                                     """
             if self.user_perm in ("Admin","Müdür"):
-                yetkipaneli_button = QPushButton(" Yetkilendirme")
-                yetkipaneli_button.setStyleSheet(self.btnstyle)
-                yetkipaneli_button.setObjectName("2")
-                yetkipaneli_button.setFixedSize(MenuPanel.width()-5,50)
-                yetkipaneli_button.clicked.connect(self.left_menu_click) 
-
                 frmprs = QPushButton(" Kişiler")
                 frmprs.setStyleSheet(self.btnstyle)
                 frmprs.setFixedSize(MenuPanel.width()-5,50)
                 frmprs.setObjectName("4")
                 frmprs.clicked.connect(self.left_menu_click) 
+
+                new_desing = QPushButton(" Admin Menü")
+                new_desing.setStyleSheet(self.btnstyle)
+                new_desing.setFixedSize(MenuPanel.width()-5,50)
+                new_desing.setObjectName("8")
+                new_desing.clicked.connect(self.left_menu_click) 
 
             reports = QPushButton(" Kişisel Raporlar")
             reports.setStyleSheet(self.btnstyle)
@@ -251,19 +251,12 @@ class SuperAdminMenu(QMainWindow):
             new_meet.setObjectName("6")
             new_meet.clicked.connect(self.left_menu_click) 
 
-            new_desing = QPushButton(" Yeni Menü")
-            new_desing.setStyleSheet(self.btnstyle)
-            new_desing.setFixedSize(MenuPanel.width()-5,50)
-            new_desing.setObjectName("8")
-            new_desing.clicked.connect(self.left_menu_click) 
-
             ayarlar = QPushButton(" Ayarlar")
             ayarlar.setStyleSheet(self.btnstyle)
             ayarlar.setFixedSize(MenuPanel.width()-5,50)
             ayarlar.setObjectName("7")
             # self.ayarlar.clicked.connect(self.ayarlar_click) 
             if self.user_perm in("Admin","Müdür") :
-                self.Menu_layout.addWidget(yetkipaneli_button)
                 self.Menu_layout.addWidget(frmprs)
                 self.Menu_layout.addWidget(new_desing)
             self.Menu_layout.addWidget(reports)
@@ -319,17 +312,10 @@ class SuperAdminMenu(QMainWindow):
         self.content_child_frame.move(0,39)
         self.content_child_frame.show()
         
-        if buton_id == 2:#Permission Top Menü
-            btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
-            btn_menu.new_btn("Ekle",self.insert_perm_user_panel)
-            btn_menu.new_btn("Güncelle",self.update_perm_user_panel)
-            btn_menu.new_btn("Yetkililer",self.list_users)
-            btn_menu.new_btn("Tara",self.scan_locale_user_data)
-        elif buton_id == 4:#Kişiler Top Menü
+        if buton_id == 4:#Kişiler Top Menü
             btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
             btn_menu.new_btn("Ekle",self.frm_prs_insert_panel)
             btn_menu.new_btn("Güncelle",self.frm_prs_update_panel)
-            btn_menu.new_btn("Kişiler",self.prs_list_panel)
         elif buton_id == 5:#Kişisel Raporlar
             btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
             btn_menu.new_btn("Firma Bazlı",self.frm_based_report_panel)
@@ -337,9 +323,10 @@ class SuperAdminMenu(QMainWindow):
         elif buton_id == 8:#Kişisel Raporlar
             btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
             btn_menu.new_btn("Workspaces",self.workspace_list_panel)
-            btn_menu.new_btn("Yetkiler",None)
+            btn_menu.new_btn("Yetkiler",self.list_users_panel)
             btn_menu.new_btn("Firmalar",self.frm_list_panel)
-            btn_menu.new_btn("Kişiler",None)
+            btn_menu.new_btn("Kişiler",self.frm_prsn_list_panel)
+            btn_menu.new_btn("Tara",self.scan_locale_user_data)
         elif buton_id == 6:#Kişiler Top Menü
             self.New_Meet_Menu()
 
@@ -649,6 +636,145 @@ class SuperAdminMenu(QMainWindow):
         dikey_layout.addLayout(yatay_layout_3)
         dikey_layout.addLayout(yatay_layout_4)
         return dikey_layout
+
+
+    def common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int):#Panelde Tanımladığımız standart widgetları sürekli aynı kodları yazamamak için oluşturuldu
+        if widget == QLineEdit:
+            textbox = QLineEdit()
+            textbox.setFixedSize(widget_width,widget_height)
+            textbox.setObjectName(widget_name)
+            textbox.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.PANEL_COLOR};border-radius: 5px;color:{self.FONT_COLOR};")
+            textbox.setPlaceholderText(widget_text)
+            return textbox
+        elif widget == QComboBox:
+            combobox = QComboBox()
+            combobox.setStyleSheet(self.combobox_style)
+            combobox.setFixedSize(widget_width, widget_height)
+            combobox.setObjectName(widget_name)
+            combobox.insertItem(0,widget_text,userData=0)
+            combobox.setCurrentIndex(0)
+            return combobox
+        elif widget == QPushButton:
+            btn = QPushButton(widget_text)
+            btn.setObjectName(widget_name)
+            btn.setStyleSheet(self.normal_button)
+            btn.setFixedSize(widget_width,widget_height)
+            return btn
+    
+    def Create_Table_Set_Items(self,widget:QWidget,widget_text,widget_width:int,widget_height:int,parent):
+        if widget == QTableWidget:
+            tablo = CustomTableWidget(1,len(widget_text),parent)
+            tablo_style = f"""QTableWidget{{
+                                border-radius:0;
+                                color:{self.FONT_COLOR};
+                                background-color: {self.PANEL_COLOR};
+                                }}
+                                QScrollBar:horizontal {{
+                                    height: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:horizontal {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+                                QScrollBar:vertical {{
+                                    width: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:vertical {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}"""
+            tablo.setStyleSheet(tablo_style)
+            tablo.horizontalHeader().setVisible(False)
+            tablo.verticalHeader().setVisible(False)
+            tablo.setFixedSize(widget_width,widget_height)
+            tablo.move(0,0)
+            tablo.show()
+            return tablo
+        elif widget == QTableWidgetItem:
+            item = QTableWidgetItem(widget_text)
+            item.setTextAlignment(Qt.AlignCenter) 
+            if widget_width == 0:
+                item.setBackground(QColor(self.BORDER_COLOR))
+            item.setFlags(QtCore.Qt.ItemIsEnabled) 
+            parent.setItem(widget_width,widget_height,item) 
+            
+    def custom_color_common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int,color1:str,color2:str):# Buda Aynı widgetların hover renklerini değiştirdiğimiz versyonları
+        if widget == QPushButton:
+            style = f"""QPushButton{{
+                                    border:0;
+                                    border-right: 1px solid {self.BORDER_COLOR};
+                                    border-radius:0;
+                                    color:{self.FONT_COLOR};
+                                    font-weight: bold;
+                                    font-family: Arial;
+                                    text-align:center;
+                                    background-color:{color1};
+                                    }}
+                                    QPushButton:Hover{{background-color:{color2};}}"""
+            btn = QPushButton(widget_text)
+            btn.setObjectName(widget_name)
+            btn.setStyleSheet(style)
+            btn.setFixedSize(widget_width,widget_height)
+            return btn
+
+    def set_combobox_items(self,set_combobox:QComboBox,process:str,self_combobox:QComboBox):#Bu adındanda analaşıalcağı gibi comboboboxlara sürekli tanımladığımız itemler için kullanılıyor ve combo değişince diğer combo itemlerini değiştirmede de kullanılıyor
+        match process:
+            case "Ws_Parent_Set":
+                set_combobox.clear()
+                set_combobox.addItem("Select Any Workspace",userData = -1)
+                set_combobox.addItem("Main Workspace",userData = 0)
+                for item in self.workspacedb.find({'parent':0}):
+                    set_combobox.addItem(item['name'],userData = item['_id'])
+            case "Self_Ws_Child":
+                set_combobox.clear()
+                set_combobox.addItem("Select Any Workspace",userData = -1)
+                for item in self.workspacedb.aggregate([{"$match":{"$or":[{'parent':self.user_workspace_id},{"_id":self.user_workspace_id}]}}]):
+                    set_combobox.addItem(item['name'],userData = item['_id'])
+            case "Select_Ws_Set_Ws":
+                set_combobox.clear()
+                ws_parent = self_combobox.itemData(self_combobox.currentIndex())
+                set_combobox.addItem("Select Any Workspace",userData = -1)
+                for item in self.workspacedb.find({"parent":ws_parent}):
+                    set_combobox.addItem(item["name"],userData = item['_id'])
+            case "Select_Ws_Set_Frm":
+                set_combobox.clear()
+                ws = self_combobox.itemData(self_combobox.currentIndex())
+                set_combobox.addItem("Select Any Workspace",userData = 0)
+                for item in self.frmdb.find({"workspace_id":ws}):
+                    set_combobox.addItem(item["name"],userData = item['_id'])
+
+    def Data_Control_Func(self,item:QWidget,process:str): # Kullanıcıdan gelen veri kontrol ettirme fonksiyonu
+        match process:
+            case "Space":
+                if item.count(" ") != len(item) and item[0] != " ":
+                    return True
+                else:
+                    return False
+
 # ---------------------------------------------------------------------- Ortak Fonksiyonlar -----------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------ Ortak Widgetlar ------------------------------------------------------------------------------------------
@@ -1852,139 +1978,6 @@ class SuperAdminMenu(QMainWindow):
                 self.bildirim("Uygun bir mail adresi giriniz.")
         else:
             self.bildirim("Önce Kişinin ekleneceği firmayı seçiniz!")
-    
-    def prs_list_panel(self):
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout()) 
-
-        yatay_layout = QHBoxLayout(self.content_child_frame)
-        frame_x = (self.contentpanel.width()-30)/3
-
-        workspace_lister = self.common_elements("workspace_lister","item1")
-        ws_list = self.common_elements("clear_list_combo","ws_list")
-        frm_list = self.common_elements("clear_list_combo","frm_list")
-        workspace_lister.setFixedWidth(frame_x)
-        ws_list.setFixedWidth(frame_x)
-        frm_list.setFixedWidth(frame_x)
-
-        workspace_lister.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list,1,workspace_lister.itemData(index)))
-        ws_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(frm_list,4,ws_list.itemData(index)))
-        frm_list.currentIndexChanged.connect(self.prs_list_table)
-
-        yatay_layout.setAlignment(Qt.AlignTop)
-        yatay_layout.addWidget(workspace_lister)
-        yatay_layout.addWidget(ws_list)
-        yatay_layout.addWidget(frm_list)
-
-        self.content_child_frame.setLayout(yatay_layout)
-    
-    def prs_list_table(self,index):
-        tablo = self.content_child_frame.findChildren(QTableWidget,"person_list")
-        frame_x = self.contentpanel.width()
-        frame_y = self.contentpanel.height()
-        if tablo:
-            tablo= tablo[0]
-            tablo.deleteLater()
-
-        sql = [
-                {
-                    '$lookup':{
-                        'from':'frm_list',
-                        'localField':'frm_id',
-                        'foreignField': '_id',
-                        'as':'frm'
-                    }
-                },
-                {
-                    '$unwind':{
-                        'path':'$frm',
-                        'preserveNullAndEmptyArrays':True
-                    }
-                },
-                {
-                    '$lookup':{
-                        'from':'workspace_list',
-                        'localField':'frm.workspace_id',
-                        'foreignField': '_id',
-                        'as':'ws'
-                    }
-                },
-                {
-                    '$unwind':{
-                        'path':'$ws',
-                        'preserveNullAndEmptyArrays':True
-                    }
-                },
-                {
-                    '$project': {
-                        "_id": 1,
-                        "fullname": 1,
-                        "mail": 1,
-                        "frm_id":1,
-                        "frm_name": "$frm.name",
-                        "ws_name": "$ws.name"
-                        }
-                }]
-        if index > 0:
-            sql.append({'$match':{'frm_id':self.sender().itemData(index)}})
-            sorgu = self.prsdb.aggregate(sql).to_list(None)
-            row= len(sorgu)
-            header = ['id','Tam Adı','Mail','Firma','Çalışma Alanı']
-            tablo = QTableWidget(row+1,len(header),self.content_child_frame)
-            tablo.setStyleSheet(f"""QTableWidget{{
-                                border-radius:0;
-                                color:{self.FONT_COLOR};
-                                background-color: {self.PANEL_COLOR};
-                                }}
-                                QScrollBar:horizontal {{
-                                    height: 5px;                 /* Kaydırma çubuğunun genişliği */
-                                    margin: 0px 0px 0px 0px; 
-                                    border: 1;
-                                    background-color:white;
-                                }}
-
-                                QScrollBar::handle:horizontal {{
-                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
-                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
-                                    border: 0 ;
-                                }}
-                                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-                                    background: none;            /* Ok işaretlerinin görünmemesi için */
-                                }}
-
-                                QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {{
-                                    background: none;            /* Ok işaretlerinin görünmemesi için */
-                                }}""")
-            tablo.horizontalHeader().setVisible(False)
-            tablo.verticalHeader().setVisible(False)
-            tablo_max_width=int((frame_x-150)/3)-1
-            tablo.setColumnWidth(0, 50)
-            tablo.setColumnWidth(1, 150)
-            tablo.setColumnWidth(2, 200)
-            tablo.setColumnWidth(3, 200)
-            tablo.setColumnWidth(4, 200)
-            tablo.setFixedSize(frame_x,frame_y-100)
-            tablo.move(0,40)
-            
-            for col in range(len(header)):
-                item = QTableWidgetItem(header[col])
-                item.setTextAlignment(Qt.AlignCenter) 
-                item.setBackground(QColor(self.BORDER_COLOR))
-                item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                tablo.setItem(0,col,item) 
-                tablo.show()
-            row_num=1
-            sql_header = ['_id','fullname','mail','frm_name','ws_name']
-            for item in sorgu:
-                for i in range(len(sql_header)):
-                    table_item = QTableWidgetItem(str(item[sql_header[i]]))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                    tablo.setItem(row_num,i,table_item)
-                row_num += 1
 
     def frm_prs_update_panel(self):
         if self.content_child_frame is not None:
@@ -2056,6 +2049,239 @@ class SuperAdminMenu(QMainWindow):
                 self.bildirim("Uygun bir mail adresi giriniz.")
         else:
             self.bildirim("Önce Kişinin ekleneceği firmayı seçiniz!")
+
+    def frm_prsn_list_panel(self):
+        if self.content_child_frame is not None:
+            for child in self.content_child_frame.findChildren(QWidget):
+                child.deleteLater()
+        if self.content_child_frame.layout():
+            QWidget().setLayout(self.content_child_frame.layout()) 
+
+        yatay_layout = QHBoxLayout(self.content_child_frame)
+        yatay_layout.setAlignment(Qt.AlignTop)
+
+        if self.user_perm == "Admin":
+            frame_x = int((self.contentpanel.width()-30)/3)
+            workspace_lister = self.common_items(QComboBox,"item1","Main Workspace",frame_x,25)
+            self.set_combobox_items(workspace_lister,"Ws_Parent_Set",workspace_lister)
+            ws_list = self.common_items(QComboBox,"workspace_list","Select Top Workspaces",frame_x,25)
+            workspace_lister.currentIndexChanged.connect(lambda :self.set_combobox_items(ws_list,"Select_Ws_Set_Ws",workspace_lister))
+            yatay_layout.addWidget(workspace_lister,0,Qt.AlignCenter)
+        else:
+            frame_x = int((self.contentpanel.width()-20)/2)
+            ws_list = self.common_items(QComboBox,"workspace_list","Select Any Workspace",frame_x,25)
+            for items in self.workspacedb.aggregate([{"$match":{"$or":[{"_id":self.user_workspace_id},{"parent":self.user_workspace_id}]}}]):
+                ws_list.addItem(items['name'],userData = items['_id'])
+        yatay_layout.addWidget(ws_list,0,Qt.AlignCenter)
+
+        frm_list = self.common_items(QComboBox,"frm_list","First Select Workspace",frame_x,25)
+        ws_list.currentIndexChanged.connect(lambda :self.set_combobox_items(frm_list,"Select_Ws_Set_Frm",ws_list))
+        yatay_layout.addWidget(frm_list,0,Qt.AlignCenter)
+        frm_list.currentIndexChanged.connect(self.frm_prsn_list)
+
+    def frm_prsn_list(self,index):
+        left_tablo = self.content_child_frame.findChildren(QTableWidget,"Left_Person_List")
+        if left_tablo:
+            left_tablo= left_tablo[0]
+            left_tablo.deleteLater()
+        right_tablo = self.content_child_frame.findChildren(QTableWidget,"Right_Person_List")
+        if right_tablo:
+            right_tablo= right_tablo[0]
+            right_tablo.deleteLater()
+
+        frame_x = self.contentpanel.width()
+        frame_y = self.contentpanel.height()
+        header = ['Tam Adı','Mail','Firma','Çalışma Alanı','']
+        left_tablo =self.Create_Table_Set_Items(QTableWidget,[""],150,self.contentpanel.height()-100,self.content_child_frame)
+        left_tablo.setObjectName("Left_Person_List")
+        left_tablo.setStyleSheet(f"""QTableWidget{{
+                                border-radius:0;
+                                color:{self.FONT_COLOR};
+                                background-color: {self.PANEL_COLOR};
+                                border:0;
+                                }}QScrollBar:horizontal {{
+                                    height: 0px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}QScrollBar:vertical {{
+                                    width: 0px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}""")
+        right_tablo = self.Create_Table_Set_Items(QTableWidget,["","","",""],self.contentpanel.width()-150,self.contentpanel.height()-100,self.content_child_frame)
+        right_tablo.setObjectName("Right_Person_List")
+        left_tablo.setColumnWidth(0, 150)
+        right_tablo.setColumnWidth(0, 200)
+        right_tablo.setColumnWidth(1, 200)
+        right_tablo.setColumnWidth(2, 200)
+        right_tablo.setColumnWidth(3, 75)
+        left_tablo.move(1,40)
+        right_tablo.move(151,40)
+        left_tablo.verticalScrollBar().valueChanged.connect(lambda:right_tablo.verticalScrollBar().setValue(left_tablo.verticalScrollBar().value()))
+        right_tablo.verticalScrollBar().valueChanged.connect(lambda:left_tablo.verticalScrollBar().setValue(right_tablo.verticalScrollBar().value()))
+        for col in range(len(header)):
+            if col == 0:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,left_tablo)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,right_tablo)
+        if index > 0:
+            add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",75,29,self.GREEN,self.ON_HOVER_GREEN)
+            add_btn.clicked.connect(self.frm_prsn_item_panel)
+            right_tablo.setCellWidget(0,3,add_btn)
+            sql = [
+                {
+                    '$lookup':{
+                        'from':'frm_list',
+                        'localField':'frm_id',
+                        'foreignField': '_id',
+                        'as':'frm'
+                    }
+                },
+                {
+                    '$unwind':{
+                        'path':'$frm',
+                        'preserveNullAndEmptyArrays':True
+                    }
+                },
+                {
+                    '$lookup':{
+                        'from':'workspace_list',
+                        'localField':'frm.workspace_id',
+                        'foreignField': '_id',
+                        'as':'ws'
+                    }
+                },
+                {
+                    '$unwind':{
+                        'path':'$ws',
+                        'preserveNullAndEmptyArrays':True
+                    }
+                },
+                {
+                    '$project': {
+                        "_id": 1,
+                        "fullname": 1,
+                        "mail": 1,
+                        "frm_id":1,
+                        "frm_name": "$frm.name",
+                        "ws_name": "$ws.name"
+                        }
+                }]
+            for db_item in self.prsdb.aggregate(sql):
+                row = left_tablo.rowCount()
+                left_tablo.insertRow(row)
+                right_tablo.insertRow(row)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["fullname"],row,0,left_tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["mail"],row,0,right_tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["frm_name"],row,1,right_tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,2,right_tablo)
+                update_btn = self.common_items(QPushButton,"update","Güncelle",75,29)
+                update_btn.setProperty("_id",db_item["_id"])
+                update_btn.clicked.connect(self.frm_prsn_item_panel)
+                right_tablo.setCellWidget(row,3,update_btn)
+
+    def frm_prsn_item_panel(self):
+        button = self.sender()
+        button_name = button.objectName()
+        Frame = self.content_child_frame.findChildren(QFrame,"frm_prs_item")
+        if Frame:
+            Frame= Frame[0]
+            Frame.deleteLater()     
+        parent_width = self.content_child_frame.width()
+        parent_height = self.content_child_frame.height()
+        Frame = QFrame(self.content_child_frame)
+        Frame.setFixedSize(parent_width,parent_height)   
+        Frame.setObjectName("frm_prs_item")
+        Frame_layout = QVBoxLayout()
+        Frame_layout.setContentsMargins(0,0,0,0)
+        Frame_layout.setSpacing(0)    
+        Frame_layout1 = QHBoxLayout()
+        Frame_layout1.setAlignment(Qt.AlignTop)
+        Frame_layout1.setContentsMargins(0,0,0,0)
+        Frame_layout1.setSpacing(0)
+        btn_menu = QFrame()
+        btn_menu.setFixedSize(parent_width-2,35)
+        btn_menu.setStyleSheet(f"border:0;border-bottom:1px solid {self.BORDER_COLOR};border-radius:0;")
+        
+        btn_menu_layout =QHBoxLayout()
+        btn_menu_layout.setContentsMargins(0,0,0,0)
+        btn_menu_layout.setSpacing(0)
+
+        back_btn = self.custom_color_common_items(QPushButton,"back_btn","<",35,34,self.WIN_COLOR,self.PANEL_COLOR)
+        back_btn.clicked.connect(lambda:Frame.deleteLater())
+        btn_menu_layout.addWidget(back_btn,0,Qt.AlignLeft)
+
+        if button_name == "update":
+            doc_id = button.property("_id")
+            del_btn = self.common_items(QPushButton,"del_btn","Sil",50,30)
+            del_btn.setProperty("_id",doc_id)
+            del_btn.clicked.connect(None)
+            btn_menu_layout.addWidget(del_btn,0,Qt.AlignRight)
+        btn_menu.setLayout(btn_menu_layout)
+        Frame_layout1.addWidget(btn_menu)
+        Frame_layout2 = QVBoxLayout()
+        Frame_layout2.setAlignment(Qt.AlignCenter)
+        Frame_layout2.setSpacing(5)
+
+        if self.user_perm == "Admin":
+            workspace_lister = self.common_items(QComboBox,"item2","Main Workspace",parent_width-200,25)
+            self.set_combobox_items(workspace_lister,"Ws_Parent_Set",workspace_lister)
+            ws_list = self.common_items(QComboBox,"workspace_list","Select Top Workspaces",parent_width-200,25)
+            Frame_layout2.addWidget(workspace_lister)
+            
+        else:
+            ws_list = self.common_items(QComboBox,"item_workspace_list","Select Any Workspace",parent_width-200,25)
+            for items in self.workspacedb.aggregate([{"$match":{"$or":[{"_id":self.user_workspace_id},{"parent":self.user_workspace_id}]}}]):
+                ws_list.addItem(items['name'],userData = items['_id'])
+        Frame_layout2.addWidget(ws_list,0,Qt.AlignCenter)
+
+        frm_list = self.common_items(QComboBox,"item_frm_list","First Select Workspace",parent_width-200,25)
+        workspace_lister.currentIndexChanged.connect(lambda :self.set_combobox_items(ws_list,"Select_Ws_Set_Ws",workspace_lister))
+        ws_list.currentIndexChanged.connect(lambda :self.set_combobox_items(frm_list,"Select_Ws_Set_Frm",ws_list))
+        Frame_layout2.addWidget(frm_list,0,Qt.AlignCenter)
+        prs_name = self.common_items(QLineEdit,"prs_name","Enter Person Name!",parent_width-200,25)
+        prs_mail = self.common_items(QLineEdit,"prs_mail","Enter Person Mail!",parent_width-200,25)
+        Frame_layout2.addWidget(prs_name,0,Qt.AlignCenter)
+        Frame_layout2.addWidget(prs_mail,0,Qt.AlignCenter)
+        
+        if button_name == "update":
+            doc = self.prsdb.find_one({"_id":button.property("_id")})
+            prs_name.setText(doc["fullname"])
+            prs_mail.setText(doc["mail"])
+            frm_id = doc["frm_id"]
+            ws = self.frmdb.find_one({"_id":frm_id})
+            ws = self.workspacedb.find_one({"_id":ws["workspace_id"]})
+            ws_id = ws["_id"]
+            if self.user_perm == "Admin":
+                
+                ws_parent = ws["parent"]
+                for i in range(workspace_lister.count()):
+                    item = workspace_lister.itemData(i)
+                    if item == ws_parent:
+                        workspace_lister.setCurrentIndex(i)
+                        break
+            for i in range(ws_list.count()):
+                item = ws_list.itemData(i)
+                if item == ws_id:
+                    ws_list.setCurrentIndex(i)
+                    break
+            for i in range(frm_list.count()):
+                item = frm_list.itemData(i)
+                if item == frm_id:
+                    frm_list.setCurrentIndex(i)
+                    break
+            
+        elif button_name == "add":
+            None 
+
+
+        Frame_layout.addLayout(Frame_layout1)
+        Frame_layout.addLayout(Frame_layout2)
+        Frame_layout.addSpacing(400)
+        Frame.setLayout(Frame_layout)
+        Frame.show()
 # ------------------------------------------------------------------------ Kişiler Paneli -------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------- Firma Paneli --------------------------------------------------------------------------------------------
@@ -2099,25 +2325,16 @@ class SuperAdminMenu(QMainWindow):
             tablo= tablo[0]
             tablo.deleteLater()
         header = ['Firma Adı','Çalışma Alanı','']
-        tablo = QTableWidget(1,len(header),self.content_child_frame)
+        tablo = self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-100,self.content_child_frame)
         tablo.setObjectName("frm_list")
-        tablo.setStyleSheet(f"border-radius:0;color:{self.FONT_COLOR};background-color: {self.PANEL_COLOR};")
-        tablo.horizontalHeader().setVisible(False)
-        tablo.verticalHeader().setVisible(False)
-        tablo_max_width=int((frame_x-75)/2)-1
+        tablo_max_width=int((frame_x-75)/2)-3
         tablo.setColumnWidth(0, tablo_max_width)
         tablo.setColumnWidth(1, tablo_max_width)
         tablo.setColumnWidth(2, 75)
-        tablo.setFixedSize(frame_x,frame_y-100)
         tablo.move(0,40)
 
         for col in range(len(header)):
-            item = QTableWidgetItem(header[col])
-            item.setTextAlignment(Qt.AlignCenter) 
-            item.setBackground(QColor(self.BORDER_COLOR))
-            item.setFlags(QtCore.Qt.ItemIsEnabled) 
-            tablo.setItem(0,col,item) 
-        tablo.show()
+            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
 
         if index > 0:
             add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",75,29,self.GREEN,self.ON_HOVER_GREEN)
@@ -2150,20 +2367,14 @@ class SuperAdminMenu(QMainWindow):
                     '$match':{'workspace_id':self.sender().itemData(index)}
                 }]
             
-            sql_header = ['name','ws_name']
             for item in self.frmdb.aggregate(sql):
                 row = tablo.rowCount()
                 tablo.insertRow(row)
-                for i in range(len(sql_header)):
-                    table_item = QTableWidgetItem(str(item[sql_header[i]]))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                    tablo.setItem(row,i,table_item)
+                self.Create_Table_Set_Items(QTableWidgetItem,item["name"],row,0,tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,item["ws_name"],row,1,tablo)
                 
-                update_btn = QPushButton("Güncelle")
-                update_btn.setStyleSheet(self.normal_button)
+                update_btn = self.common_items(QPushButton,"update","Güncelle",75,29)
                 update_btn.setProperty("_id",item["_id"])
-                update_btn.setObjectName("update")
                 update_btn.clicked.connect(self.frm_item_panel)
                 tablo.setCellWidget(row,2,update_btn)
 
@@ -2177,6 +2388,7 @@ class SuperAdminMenu(QMainWindow):
         parent_width = self.content_child_frame.width()
         parent_height = self.content_child_frame.height()
         Frame = QFrame(self.content_child_frame)
+        Frame.setObjectName("frm_item")
         Frame.setFixedSize(parent_width,parent_height)
         doc_id = None
         parent_id = None
@@ -2362,78 +2574,12 @@ class SuperAdminMenu(QMainWindow):
             else:
                 self.bildirim('Firma Adı Boş olamaz veya boşluk ile başlayamaz!!')
 
-    def common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int):
-        if widget == QLineEdit:
-            textbox = QLineEdit()
-            textbox.setFixedSize(widget_width,widget_height)
-            textbox.setObjectName(widget_name)
-            textbox.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.PANEL_COLOR};border-radius: 5px;color:{self.FONT_COLOR};")
-            textbox.setPlaceholderText(widget_text)
-            return textbox
-        elif widget == QComboBox:
-            combobox = QComboBox()
-            combobox.setStyleSheet(self.combobox_style)
-            combobox.setFixedSize(widget_width, widget_height)
-            combobox.setObjectName(widget_name)
-            combobox.insertItem(0,widget_text,userData=0)
-            combobox.setCurrentIndex(0)
-            return combobox
-        elif widget == QPushButton:
-            btn = QPushButton(widget_text)
-            btn.setObjectName(widget_name)
-            btn.setStyleSheet(self.normal_button)
-            btn.setFixedSize(widget_width,widget_height)
-            return btn
-
-    def custom_color_common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int,color1:str,color2:str):
-        if widget == QPushButton:
-            style = f"""QPushButton{{
-                                    border:0;
-                                    border-right: 1px solid {self.BORDER_COLOR};
-                                    border-radius:0;
-                                    color:{self.FONT_COLOR};
-                                    font-weight: bold;
-                                    font-family: Arial;
-                                    text-align:center;
-                                    background-color:{color1};
-                                    }}
-                                    QPushButton:Hover{{background-color:{color2};}}"""
-            btn = QPushButton(widget_text)
-            btn.setObjectName(widget_name)
-            btn.setStyleSheet(style)
-            btn.setFixedSize(widget_width,widget_height)
-            return btn
-
-    def set_combobox_items(self,set_combobox:QComboBox,process:str,self_combobox:QComboBox):
-        match process:
-            case "Ws_Parent_Set":
-                set_combobox.clear()
-                set_combobox.addItem("Select Any Workspace",userData = -1)
-                set_combobox.addItem("Main Workspace",userData = 0)
-                for item in self.workspacedb.find({'parent':0}):
-                    set_combobox.addItem(item['name'],userData = item['_id'])
-            case "Self_Ws_Child":
-                set_combobox.clear()
-                set_combobox.addItem("Select Any Workspace",userData = -1)
-                for item in self.workspacedb.aggregate([{"$match":{"$or":[{'parent':self.user_workspace_id},{"_id":self.user_workspace_id}]}}]):
-                    set_combobox.addItem(item['name'],userData = item['_id'])
-            case "Select_Ws_Set_Ws":
-                set_combobox.clear()
-                ws_parent = self_combobox.itemData(self_combobox.currentIndex())
-                set_combobox.addItem("Select Any Workspace",userData = -1)
-                for item in self.workspacedb.find({"parent":ws_parent}):
-                    set_combobox.addItem(item["name"],userData = item['_id'])
-
-    def Data_Control_Func(self,item:QWidget,process:str):
-        match process:
-            case "Space":
-                if item.count(" ") != len(item) and item[0] != " ":
-                    return True
-                else:
-                    return False
 # ------------------------------------------------------------------------- Firma Paneli --------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------- Yetki Paneli --------------------------------------------------------------------------------------------
+    # Bu panel yerela ağdaki kullanıcıları tarar
+    # Kişiye yetki tanımlatır güncelletir silme seçeneği veriler kaybolmaması için izin verilmememiştir.
+    # Yetkiye göre kişiyi tanımlayacağı alan ve verebileceği yetkileri kontrol eder
     def scan_locale_user_data(self):# yerel ağdaki kullanıcıları tarıyor
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
@@ -2447,175 +2593,31 @@ class SuperAdminMenu(QMainWindow):
         if resp == 1024:
             Common_Class.get_user_accounts()     
 
-    def update_perm_user_panel(self):#Kullanıcı yetki güncelleme alanı tasarımı
+    def list_users_panel(self):#Kullanıcıları listeleme alan tasarımı
         if self.content_child_frame is not None:
             for child in self.content_child_frame.findChildren(QWidget):
                 child.deleteLater()
         if self.content_child_frame.layout():
             QWidget().setLayout(self.content_child_frame.layout()) 
         
-        dikey_layout = QVBoxLayout(self.content_child_frame)
+        yatay_layout = QHBoxLayout(self.content_child_frame)
+        yatay_layout.setAlignment(Qt.AlignTop)
+        
         Perm_list=["Admin","Müdür","Personel","Yetkisiz","Gereksiz"]
+        if self.user_perm == "Müdür":
+            Perm_list.remove("Admin")
         
-        ws_list = self.common_elements("clear_list_combo","workspace_list")
-        user_combo = self.common_elements("clear_list_combo","user_list")
-        user_fullname = self.common_elements("TextBox","user_fullname")
-        workspace_lister = self.common_elements("workspace_lister","item1")
-        ws_list2 = self.common_elements("clear_list_combo","new_workspace_list")
-        perm_combo = self.common_elements("clear_list_combo","perm_list")
-        btn = self.common_elements("button_update","btn")
-        
-        
-        
+        perm_combo = self.common_items(QComboBox,"perm_list","Tüm Yetkiler",int(self.content_child_frame.width()/2),25)
         perm_combo.addItems(Perm_list)
-        ws_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(user_combo,3,ws_list.itemData(index)))
-        user_combo.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(user_fullname,2,user_combo.currentText()[:user_combo.currentText().find("-")-1] if index != 0 else " " ))
-        workspace_lister.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list2,1,workspace_lister.itemData(index)))
-        ws_list.clear()
-        self.workspace_combo_set_items(ws_list,2)
-        ws_list.insertItem(0,"Select Workspace !!",userData=-1)
-        ws_list.insertItem(1,"Tüm Yetkililer",userData=0)
-        ws_list.setCurrentIndex(0)
-        btn.clicked.connect(self.update_perm_user_btn_click)
-        
-        dikey_layout.setAlignment(Qt.AlignCenter)
-        dikey_layout.addWidget(ws_list)
-        dikey_layout.addWidget(user_combo)
-        dikey_layout.addWidget(user_fullname)
-        dikey_layout.addWidget(workspace_lister)
-        dikey_layout.addWidget(ws_list2)
-        dikey_layout.addWidget(perm_combo)
-        dikey_layout.addWidget(btn,0,Qt.AlignCenter)
-        dikey_layout.addSpacing(150)
-
-        self.content_child_frame.setLayout(dikey_layout)
-
-    def update_perm_user_btn_click(self):#Kullanıcı yetki güncelleme 
-        user_fullname = self.content_child_frame.findChildren(QLineEdit,"user_fullname")[0].text()
-        user_id = self.content_child_frame.findChildren(QComboBox,"user_list")[0]
-        user_id = user_id.itemData(user_id.currentIndex())
-        workspace_id = self.content_child_frame.findChildren(QComboBox,"new_workspace_list")[0]
-        workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))
-        perm = self.content_child_frame.findChildren(QComboBox,"perm_list")[0].currentText()
-        if isinstance(user_id,int):
-            if user_fullname.count(" ") != len(user_fullname) and user_fullname[0] != " ":
-                if workspace_id != 0:
-                    self.usersdatadb.update_one({'_id':user_id},{'$set':{'real_name':user_fullname,'workspace_id':workspace_id,'permission':perm}})
-                    self.bildirim("Kullanıcı Güncellenmiştir!!") 
-                    self.update_perm_user_panel()
-                else:
-                   self.bildirim("Lütfen Çalışma alanı seçiniz!!") 
-            else:
-                self.bildirim("Kişinin Adı Boş olamaz veya boşluk ile başlayamaz!!")
-        else:
-            self.bildirim("Lütfen Kullanıcı Seçiniz!!")
-
-    def insert_perm_user_panel(self):#Kullanıcıya yetki tanımlama alanının tasarımı
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout()) 
-        
-        dikey_layout = QVBoxLayout(self.content_child_frame)
-        Perm_list=["Admin","Müdür","Personel","Yetkisiz","Gereksiz"]
-        
-        user_combo = self.common_elements("clear_list_combo","user_list")
-        user_fullname = self.common_elements("TextBox","user_fullname")
-        workspace_lister = self.common_elements("workspace_lister","item1")
-        ws_list = self.common_elements("clear_list_combo","workspace_list")
-        perm_combo = self.common_elements("clear_list_combo","perm_list")
-        btn = self.common_elements("button_add","btn")
-        
-        perm_combo.addItems(Perm_list)
-        workspace_lister.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list,1,workspace_lister.itemData(index)))
-        btn.clicked.connect(self.insert_perm_user_btn_click)
-        
-        dikey_layout.setAlignment(Qt.AlignCenter)
-        dikey_layout.addWidget(user_combo)
-        dikey_layout.addWidget(user_fullname)
-        dikey_layout.addWidget(workspace_lister)
-        dikey_layout.addWidget(ws_list)
-        dikey_layout.addWidget(perm_combo)
-        dikey_layout.addWidget(btn,0,Qt.AlignCenter)
-        dikey_layout.addSpacing(150)
-
-        self.content_child_frame.setLayout(dikey_layout)
-
-        if os.path.isfile("LocaleUsersData.json") == True:
-                with open('LocaleUsersData.json', 'r') as file:
-                    data = json.load(file)
-                for i in self.usersdatadb.find():
-                    SID = self.cp.decript(i['SID'])
-                    data =list(filter(lambda item: item['SID'] != SID,data))
-
-                for i in data:
-                    user_combo.addItem(i['name']+" - "+i['fullname'],userData=i['SID'])
-        else:
-            user_combo.addItem("Please Scan Local User !!",userData=0)
-    
-    def insert_perm_user_btn_click(self):#Kullanıcıya yetki tanımlama
-        user_fullname = self.content_child_frame.findChildren(QLineEdit,"user_fullname")[0].text()
-        user_sid = self.content_child_frame.findChildren(QComboBox,"user_list")[0]
-        user_sid = user_sid.itemData(user_sid.currentIndex())
-        workspace_id = self.content_child_frame.findChildren(QComboBox,"workspace_list")[0]
-        workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))
-        perm = self.content_child_frame.findChildren(QComboBox,"perm_list")[0].currentText()
-        if user_sid != 0:
-            if user_fullname.count(" ") != len(user_fullname) and user_fullname[0] != " ":
-                if workspace_id != 0:
-                    data = {"_id":"","SID":"",'username':'','real_name':"",'workspace_id':"","permission":""}
-                    data_id = self.usersdatadb.find().sort({"_id": -1}).limit(1).to_list()
-                    if data_id:
-                        data_id = int(data_id[0]['_id'])+1
-                    else:
-                        data_id = 1
-                    if os.path.isfile("LocaleUsersData.json") == True:
-                        with open('LocaleUsersData.json', 'r') as file:
-                            json_data = json.load(file)
-                    json_data =list(filter(lambda item: item['SID'] == user_sid,json_data))
-                    data['_id'] = data_id
-                    data['SID'] = self.cp.cript(user_sid)
-                    data['username'] = json_data[0]['name']
-                    data['real_name'] = user_fullname
-                    data['workspace_id'] = workspace_id
-                    data['permission'] = perm
-                    self.usersdatadb.insert_one(data)
-                    self.bildirim(f"{user_fullname} adlı kişi yetkilendirilmiştir.")
-                    self.insert_perm_user_panel()
-                else:
-                    self.bildirim("Düzgün bir çalışma alanı seçiniz!!")
-            else:
-                self.bildirim("Kişinin Adı Boş olamaz veya boşluk ile başlayamaz!!")
-        else:
-            self.bildirim("Lütfen Tara Butonuna basarak lokal ağdaki kullanıcıları tarayınız!!")
-
-    def list_users(self):#Kullanıcıları listeleme alan tasarımı
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout()) 
-
-        frame_x = self.contentpanel.width()
-        x_center = self.content_child_frame.width()/2
-        
-        Perm_list=["Tüm Yetkiler","Admin","Müdür","Personel","Yetkisiz","Gereksiz"]
-        perm_combo = QComboBox(self.content_child_frame)
-        perm_combo.setStyleSheet(self.combobox_style)
-        perm_combo.setFixedSize(frame_x-200, 25)
-        perm_combo.move(x_center-int((perm_combo.width()/2)),5)
-        perm_combo.addItems(Perm_list)
-        perm_combo.setObjectName("perm_list")
-        perm_combo.show()
+        perm_combo.currentIndexChanged.connect(self.list_user_table)
         perm_combo.setCurrentIndex(1)
-        perm_combo.currentIndexChanged.connect(self.set_list_user_table)
         perm_combo.setCurrentIndex(0)
+
+        yatay_layout.addWidget(perm_combo,0,Qt.AlignCenter)
+        self.content_child_frame.setLayout(yatay_layout)
     
-    def set_list_user_table(self,index): # seçilen yetkiye göre tablo filtreleme
+    def list_user_table(self,index): # seçilen yetkiye göre tablo filtreleme
         tablo = self.content_child_frame.findChildren(QTableWidget,"user_list")
-        frame_x = self.contentpanel.width()
-        frame_y = self.contentpanel.height()
         if tablo:
             tablo= tablo[0]
             tablo.deleteLater()
@@ -2634,92 +2636,220 @@ class SuperAdminMenu(QMainWindow):
                         'path':'$ws_name',
                         'preserveNullAndEmptyArrays':True
                     }
+                },
+                {
+                    '$project':{
+                        "_id":1,
+                        "SID":None,
+                        "username":1,
+                        "real_name":1,
+                        "workspace_id":1,
+                        "permission":1,
+                        "ws_name":"$ws_name.name",
+                        "ws_parent":"$ws_name.parent"
+                    }
                 }]
+        if self.user_perm == "Müdür":
+            sql.append({'$match':{"$or":[{"ws_parent":self.user_workspace_id},{"workspace_id":self.user_workspace_id}],'permission':{"$ne":"Admin"}}})
+
         if index != 0:
-            sql.append({'$match':{'permission':self.sender().currentText()}})
+            sql.append({'$match':{'permission':self.sender().currentText(),"_id":{"$ne":self.user_id}}})
+        else:
+            sql.append({'$match':{'permission':{"$ne":"Gereksiz"},"_id":{"$ne":self.user_id}}})
         
-        sorgu = self.usersdatadb.aggregate(sql).to_list(None)
-        row= len(sorgu)
-        header = ['id','Tam Adı','Kullanıcı Adı','Yetki','Çalışma Alanı']
-        tablo = QTableWidget(row+1,len(header),self.content_child_frame)
-        tablo.setStyleSheet(f"border-radius:0;color:{self.FONT_COLOR};background-color: {self.PANEL_COLOR};")
-        tablo.horizontalHeader().setVisible(False)
-        tablo.verticalHeader().setVisible(False)
-        tablo_max_width=int((frame_x-225)/2)-1
-        tablo.setColumnWidth(0, 50)
-        tablo.setColumnWidth(1, tablo_max_width)
-        tablo.setColumnWidth(2, 100)
-        tablo.setColumnWidth(3, 75)
-        tablo.setColumnWidth(4, tablo_max_width)
-        tablo.setFixedSize(frame_x,frame_y-95)
-        tablo.move(0,35)
+        header = ['Tam Adı','Kullanıcı Adı','Yetki','Çalışma Alanı','']
+        tablo = self.Create_Table_Set_Items(QTableWidget,header,self.contentpanel.width(),self.contentpanel.height()-100,self.content_child_frame)
+        tablo_max_width=int((self.contentpanel.width()-250)/2)-3
+        tablo.setColumnWidth(0, tablo_max_width)
+        tablo.setColumnWidth(1, 100)
+        tablo.setColumnWidth(2, 75)
+        tablo.setColumnWidth(3, tablo_max_width)
+        tablo.setColumnWidth(4, 75)
+        tablo.move(0,40)
+        tablo.setObjectName("user_list")
         
         for col in range(len(header)):
-            item = QTableWidgetItem(header[col])
-            item.setTextAlignment(Qt.AlignCenter) 
-            item.setBackground(QColor(self.BORDER_COLOR))
-            item.setFlags(QtCore.Qt.ItemIsEnabled) 
-            tablo.setItem(0,col,item) 
-            tablo.show()
-        row_num=1
-        sql_header = ['_id','real_name','username','permission','ws_name','name']
-        for item in sorgu:
-            for i in range(len(sql_header)):
-                if i != 4 and i != 5:
-                    table_item = QTableWidgetItem(str(item[sql_header[i]]))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                    tablo.setItem(row_num,i,table_item)
-                else:
-                    table_item = QTableWidgetItem(str(item[sql_header[i]][sql_header[i+1]]))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                    tablo.setItem(row_num,i,table_item)
+            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
+        
+        add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",74,29,self.GREEN,self.ON_HOVER_GREEN)
+        add_btn.clicked.connect(self.users_item_panel)
+        tablo.setCellWidget(0,4,add_btn)
+
+        for db_item in self.usersdatadb.aggregate(sql):
+            row = tablo.rowCount()
+            tablo.insertRow(row)
+
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["real_name"],row,0,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["username"],row,1,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["permission"],row,2,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,3,tablo)
+
+            update_btn = self.common_items(QPushButton,"update","Güncelle",74,29)
+            update_btn.setProperty("_id",db_item["_id"])
+            update_btn.clicked.connect(self.users_item_panel)
+            tablo.setCellWidget(row,4,update_btn)
+
+    def users_item_panel(self):
+        button = self.sender()
+        button_name = button.objectName() 
+        Frame = self.content_child_frame.findChildren(QFrame,"users_item")
+        if Frame:
+            Frame= Frame[0]
+            Frame.deleteLater()
+        parent_width = self.content_child_frame.width()
+        parent_height = self.content_child_frame.height()
+        Frame = QFrame(self.content_child_frame)
+        Frame.setFixedSize(parent_width,parent_height)
+        Frame_layout = QVBoxLayout()
+        Frame_layout.setContentsMargins(0,0,0,0)
+        Frame_layout.setSpacing(0)
+
+        Frame_layout1 = QHBoxLayout()
+
+        btn_menu = QFrame()
+        btn_menu.setFixedSize(parent_width-2,35)
+        btn_menu.setStyleSheet(f"border:0;border-bottom:1px solid {self.BORDER_COLOR};border-radius:0;")
+        
+        btn_menu_layout =QHBoxLayout()
+        btn_menu_layout.setContentsMargins(0,0,0,0)
+        btn_menu_layout.setSpacing(0)
+
+        back_btn = self.custom_color_common_items(QPushButton,"back_btn","<",35,34,self.WIN_COLOR,self.PANEL_COLOR)
+        back_btn.clicked.connect(lambda:Frame.deleteLater())
+
+        btn_menu_layout.addWidget(back_btn,0,Qt.AlignLeft)
+
+        btn_menu.setLayout(btn_menu_layout)
+
+        Frame_layout1.addWidget(btn_menu)
+        Frame_layout2 = QVBoxLayout()
+        Frame_layout2.setAlignment(Qt.AlignCenter)
+        Frame_layout2.setSpacing(5)
+        
+        user_fullname = self.common_items(QLineEdit,"user_fullname","Enter User Real Name",parent_width-200,25)
+        Frame_layout2.addWidget(user_fullname) 
+        perms = ["Admin","Müdür","Personel","Yetkisiz","Gereksiz"]    
+        perm_combo = self.common_items(QComboBox,"item_panel_perm_list","Select User Permission",parent_width-200,25)
+
+        if self.user_perm == "Admin":
+            workspace_lister = self.common_items(QComboBox,"item1","Main Workspace",parent_width-200,25)
+            self.set_combobox_items(workspace_lister,"Ws_Parent_Set",workspace_lister)
+            ws_list = self.common_items(QComboBox,"workspace_list","Select Top Workspaces",parent_width-200,25)
+            workspace_lister.currentIndexChanged.connect(lambda :self.set_combobox_items(ws_list,"Select_Ws_Set_Ws",workspace_lister))
+            Frame_layout2.addWidget(workspace_lister)
+        else:
+            perms.remove("Admin")
+            perms.remove("Müdür")
+            ws_list = self.common_items(QComboBox,"workspace_list","Select Any Workspace",parent_width-200,25)
+            for items in self.workspacedb.aggregate([{"$match":{"$or":[{"_id":self.user_workspace_id},{"parent":self.user_workspace_id}]}}]):
+                ws_list.addItem(items['name'],userData = items['_id'])
+        Frame_layout2.addWidget(ws_list)
+        perm_combo.addItems(perms)
+        Frame_layout2.addWidget(perm_combo)
+        if button_name == "add":
+            user_combo = self.common_items(QComboBox,"user_list","Select Any New User!",parent_width-200,25)
+            if os.path.isfile("LocaleUsersData.json") == True:
+                with open('LocaleUsersData.json', 'r') as file:
+                    data = json.load(file)
+                for i in self.usersdatadb.find():
+                    SID = self.cp.decript(i['SID'])
+                    data =list(filter(lambda item: item['SID'] != SID,data))
+
+                for i in data:
+                    user_combo.addItem(i['name']+" - "+i['fullname'],userData=i['SID'])
+            else:
+                user_combo.addItem("Please Scan Local User !!",userData=0)
+            Frame_layout2.insertWidget(0,user_combo)
+        elif button_name == "update":
+            doc_id = button.property("_id")
+            self_item = self.usersdatadb.find_one({"_id":doc_id})
+            user_fullname.setText(self_item["real_name"])
+            if self.user_perm == "Admin":
+                ws_parent =self.workspacedb.find_one({"_id":self_item["workspace_id"]})
+                for i in range(workspace_lister.count()):
+                    item = workspace_lister.itemData(i)
+                    if item == ws_parent["parent"]:
+                        workspace_lister.setCurrentIndex(i)
+                        break
+            for i in range(ws_list.count()):
+                item = ws_list.itemData(i)
+                if item == self_item["workspace_id"]:
+                    ws_list.setCurrentIndex(i)
                     break
-            row_num += 1
+        
+            for i in range(perm_combo.count()):
+                item = perm_combo.itemText(i)
+                if self_item["permission"] == item:
+                    perm_combo.setCurrentIndex(i)
+                    break
+        
+        item_button_text = "Ekle" if button_name == "add" else "Güncelle"
+        item_button_objname = "add" if button_name == "add" else "update"
+        item_button = self.common_items(QPushButton,item_button_objname,item_button_text,75,30)
+        if button_name == "update":
+            item_button.setProperty("_id",button.property("_id"))
+        item_button.clicked.connect(self.users_process)
+        Frame_layout2.addWidget(item_button,0,Qt.AlignCenter)
 
-    def common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int):
-        if widget == QLineEdit:
-            textbox = QLineEdit()
-            textbox.setFixedSize(widget_width,widget_height)
-            textbox.setObjectName(widget_name)
-            textbox.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.PANEL_COLOR};border-radius: 5px;color:{self.FONT_COLOR};")
-            textbox.setPlaceholderText(widget_text)
-            return textbox
-        elif widget == QComboBox:
-            combobox = QComboBox()
-            combobox.setStyleSheet(self.combobox_style)
-            combobox.setFixedSize(widget_width, widget_height)
-            combobox.setObjectName(widget_name)
-            combobox.insertItem(0,widget_text,userData=0)
-            combobox.setCurrentIndex(0)
-            return combobox
-        elif widget == QPushButton:
-            btn = QPushButton(widget_text)
-            btn.setObjectName(widget_name)
-            btn.setStyleSheet(self.normal_button)
-            btn.setFixedSize(widget_width,widget_height)
-            return btn
-
-    def custom_color_common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int,color1:str,color2:str):
-        if widget == QPushButton:
-            style = f"""QPushButton{{
-                                    border:0;
-                                    border-right: 1px solid {self.BORDER_COLOR};
-                                    border-radius:0;
-                                    color:{self.FONT_COLOR};
-                                    font-weight: bold;
-                                    font-family: Arial;
-                                    text-align:center;
-                                    background-color:{color1};
-                                    }}
-                                    QPushButton:Hover{{background-color:{color2};}}"""
-            btn = QPushButton(widget_text)
-            btn.setObjectName(widget_name)
-            btn.setStyleSheet(style)
-            btn.setFixedSize(widget_width,widget_height)
-            return btn
-
+        Frame_layout.addLayout(Frame_layout1)
+        Frame_layout.addLayout(Frame_layout2)
+        Frame.setLayout(Frame_layout)
+        Frame.show()
+    
+    def users_process(self):
+        button = self.sender()
+        button_name = button.objectName()  
+        user_fullname = self.content_child_frame.findChildren(QLineEdit,"user_fullname")[0].text()
+        workspace_id = self.content_child_frame.findChildren(QComboBox,"workspace_list")[0]
+        workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))  
+        perm = self.content_child_frame.findChildren(QComboBox,"item_panel_perm_list")[0].currentText()
+        if self.Data_Control_Func(user_fullname,"Space"):
+            if workspace_id != 0:
+                if perm in ["Admin","Müdür","Personel","Gereksiz","Yetkisiz"]:
+                    if button_name == "update":
+                        self.usersdatadb.update_one({'_id':button.property("_id")},{'$set':{'real_name':user_fullname,'workspace_id':workspace_id,'permission':perm}})
+                        self.bildirim("Kullanıcı Güncellenmiştir!!") 
+                        Frame = self.content_child_frame.findChildren(QFrame,"users_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.list_users_panel()
+                    else:
+                        user_sid = self.content_child_frame.findChildren(QComboBox,"user_list")[0]
+                        user_sid = user_sid.itemData(user_sid.currentIndex())
+                        if user_sid != 0:
+                            data = {"_id":"","SID":"",'username':'','real_name':"",'workspace_id':"","permission":""}
+                            data_id = self.usersdatadb.find().sort({"_id": -1}).limit(1).to_list()
+                            if data_id:
+                                data_id = int(data_id[0]['_id'])+1
+                            else:
+                                data_id = 1
+                            if os.path.isfile("LocaleUsersData.json") == True:
+                                with open('LocaleUsersData.json', 'r') as file:
+                                    json_data = json.load(file)
+                            json_data =list(filter(lambda item: item['SID'] == user_sid,json_data))
+                            data['_id'] = data_id
+                            data['SID'] = self.cp.cript(user_sid)
+                            data['username'] = json_data[0]['name']
+                            data['real_name'] = user_fullname
+                            data['workspace_id'] = workspace_id
+                            data['permission'] = perm
+                            self.usersdatadb.insert_one(data)
+                            self.bildirim(f"{user_fullname} adlı kişi yetkilendirilmiştir.")
+                            Frame = self.content_child_frame.findChildren(QFrame,"users_item")
+                            if Frame:
+                                Frame= Frame[0]
+                                Frame.deleteLater()
+                            self.list_users_panel()
+                        else:
+                            self.bildirim("Düzgün bir kullanıcı seçiniz!! Kullanıcı yoksa lütfen yerel ağdaki kullanıcıları taratınız!")   
+                else:
+                    self.bildirim("Düzgün bir yetki seçiniz!!")
+            else:
+                self.bildirim("Düzgün bir çalışma alanı seçiniz!!")
+        else:
+            self.bildirim("Kişinin Adı Boş olamaz veya boşluk ile başlayamaz!!")
+        
 # ------------------------------------------------------------------------- Yetki Paneli --------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------- WorkSpace ------------------------------------------------------------------------------------
@@ -2760,58 +2890,33 @@ class SuperAdminMenu(QMainWindow):
                 }]
         if self.user_perm == "Müdür":
             sql.append({"$match":{"parent":self.user_workspace_id}})
-        workspace_items = self.workspacedb.aggregate(sql).to_list(None)
 
         header = ['isim','Bağlı Olduğu Alan','']
-        tablo = QTableWidget(len(workspace_items)+1,len(header),self.content_child_frame)
-        tablo.setStyleSheet(f"border-radius:0;color:{self.FONT_COLOR};background-color: {self.PANEL_COLOR};")
-        tablo.horizontalHeader().setVisible(False)
-        tablo.verticalHeader().setVisible(False)
-        tablo_max_width=int((frame_x-75)/2)-1
+        tablo = self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-60,self.content_child_frame)
+        tablo_max_width=int((frame_x-75)/2)-3
         tablo.setColumnWidth(0, tablo_max_width)
         tablo.setColumnWidth(1, tablo_max_width)
         tablo.setColumnWidth(2, 75)
-        tablo.setFixedSize(frame_x,frame_y-60)
-        tablo.move(0,0)
-        tablo.show()
 
         for col in range(len(header)):
-            item = QTableWidgetItem(header[col])
-            item.setTextAlignment(Qt.AlignCenter) 
-            item.setBackground(QColor(self.BORDER_COLOR))
-            item.setFlags(QtCore.Qt.ItemIsEnabled) 
-            tablo.setItem(0,col,item) 
+            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
         
         add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",74,29,self.GREEN,self.ON_HOVER_GREEN)
         add_btn.clicked.connect(self.workspace_item_panel)#self.del_workspace_btn_click
         tablo.setCellWidget(0,2,add_btn)
 
-        if workspace_items:
-            row_num=1
-            for db_item in workspace_items:
-                item = QTableWidgetItem(str(db_item['name']))
-                item.setTextAlignment(Qt.AlignCenter) 
-                item.setFlags(QtCore.Qt.ItemIsEnabled)
-                tablo.setItem(row_num,0,item)
+        for db_items in self.workspacedb.aggregate(sql):
+            row = tablo.rowCount()
+            tablo.insertRow(row)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_items["name"],row,0,tablo)
 
-                if db_item['parent'] != 0:
-                    item = QTableWidgetItem(str(db_item['parent_name']))
-                    item.setTextAlignment(Qt.AlignCenter) 
-                    item.setFlags(QtCore.Qt.ItemIsEnabled)
-                    tablo.setItem(row_num,1,item)
-                else:
-                    item = QTableWidgetItem("Main Workspace")
-                    item.setTextAlignment(Qt.AlignCenter) 
-                    item.setFlags(QtCore.Qt.ItemIsEnabled)
-                    tablo.setItem(row_num,1,item)
+            widget_text = db_items["parent_name"] if db_items["parent"] != 0 else "Main Workspace"
+            self.Create_Table_Set_Items(QTableWidgetItem,widget_text,row,1,tablo)
 
-                update_btn = QPushButton("Güncelle")
-                update_btn.setStyleSheet(self.normal_button)
-                update_btn.setProperty("_id",db_item["_id"])
-                update_btn.setObjectName("update")
-                update_btn.clicked.connect(self.workspace_item_panel)#self.del_workspace_btn_click
-                tablo.setCellWidget(row_num,2,update_btn)
-                row_num+=1
+            update_btn = self.common_items(QPushButton,"update","Güncelle",74,29)
+            update_btn.setProperty("_id",db_items["_id"])
+            update_btn.clicked.connect(self.workspace_item_panel)#self.del_workspace_btn_click
+            tablo.setCellWidget(row,2,update_btn)
 
         self.content_child_frame.show()
     
@@ -3024,6 +3129,6 @@ if __name__ == "__main__":
     #     else:
     #         window = SuperAdminMenu(THEME_ID,user,0,0,"Yetkisiz")
     
-    window = SuperAdminMenu(1,"sistemdestek",1,1,"Müdür")
+    window = SuperAdminMenu(1,"sistemdestek",1,1,"Admin")
     window.show()
     sys.exit(app.exec())
