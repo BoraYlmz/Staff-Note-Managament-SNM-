@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,QFrame,QHBoxLayout,QLineEdit,QPushButton,QComboBox,QSizePolicy,QSpacerItem,QTableWidget,QTableWidgetItem,QMessageBox,QDateEdit,QTextEdit
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,QFrame,QHBoxLayout,QLineEdit,QPushButton,QComboBox,QSizePolicy,QSpacerItem,QTableWidget,QTableWidgetItem,QMessageBox,QDateEdit,QTextEdit,QCheckBox,QScrollArea
 from PySide6.QtCore import Qt,QDate,QTimer
 from PySide6 import QtCore , QtWidgets
 from PySide6.QtGui import QColor,QTextCharFormat,QTextCursor,QFont,QPalette,QBrush
@@ -18,17 +18,10 @@ from dotenv import load_dotenv
 import ast
 
 class Content_Button_Menu():
-    def __init__(self,parent,BORDER_COLOR,WIN_COLOR,FONT_COLOR,PANEL_COLOR,OS_RED,ON_HOVER_OS_RED):
-        self.BORDER_COLOR = BORDER_COLOR
-        self.WIN_COLOR = WIN_COLOR
-        self.FONT_COLOR = FONT_COLOR
-        self.PANEL_COLOR = PANEL_COLOR
-        self.OS_RED = OS_RED
-        self.ON_HOVER_OS_RED = ON_HOVER_OS_RED
-
+    def __init__(self,parent,main_class:None):
         btn_menu_frm = QFrame(parent)
         btn_menu_frm.setFixedSize(parent.width(),40)
-        btn_menu_frm.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.WIN_COLOR};border-radius:25px;border-bottom-right-radius:0px;border-top-right-radius:0px;border-bottom-left-radius:0px;")
+        btn_menu_frm.setStyleSheet(f"border: 1px solid {main_class.BORDER_COLOR};background-color:{main_class.WIN_COLOR};border-radius:25px;border-bottom-right-radius:0px;border-top-right-radius:0px;border-bottom-left-radius:0px;")
         btn_menu_frm.move(0,0)
 
         self.btn_menu_h_layout = QHBoxLayout(btn_menu_frm)
@@ -37,10 +30,10 @@ class Content_Button_Menu():
         self.spacer = QSpacerItem(1,39,QSizePolicy.Maximum, QSizePolicy.Maximum)
         self.btn_menu_h_layout.addItem(self.spacer)
 
-        self.left_btn_sheet = f"""QPushButton {{color:{self.FONT_COLOR};background-color:{self.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {self.BORDER_COLOR}; border-bottom:1px solid {self.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{self.BORDER_COLOR};}} """
-        self.left_btn_clicked_sheet = f"""QPushButton {{color:{self.FONT_COLOR};background-color:{self.OS_RED};font-size:14px;border: 0;border-right:1px solid {self.BORDER_COLOR}; border-bottom:1px solid {self.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{self.ON_HOVER_OS_RED};}} """
-        self.btn_sheet=f"""QPushButton {{color:{self.FONT_COLOR};background-color:{self.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {self.BORDER_COLOR}; border-bottom:1px solid {self.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{self.BORDER_COLOR};}} """
-        self.btn_clicked_sheet = f"""QPushButton {{color:{self.FONT_COLOR};background-color:{self.OS_RED};font-size:14px;border: 0;border-right:1px solid {self.BORDER_COLOR}; border-bottom:1px solid {self.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{self.ON_HOVER_OS_RED};}} """
+        self.left_btn_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.BORDER_COLOR};}} """
+        self.left_btn_clicked_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
+        self.btn_sheet=f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.BORDER_COLOR};}} """
+        self.btn_clicked_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
         self.clicked_buttons = None
         self.first_btn = None
 
@@ -93,6 +86,78 @@ class CustomTableWidget(QTableWidget):
         else:
             super().wheelEvent(event)
 
+class TodoItem(QWidget):
+    def __init__(self, todo_data, parent=None):
+        super().__init__(parent)
+        self.todo_data = todo_data  # Gelen veriyi sakla
+        self.setFixedSize(parent.content_child_frame.width() - 25, 70)
+        self.parent_class = parent
+        
+        todo_area_content = QWidget()   
+        todo_area_content.setStyleSheet(f"border:1px solid {parent.BORDER_COLOR};border-radius:0;")
+        todo_area_content.setFixedSize(self.width()-10, self.height()-10)
+        todo_area_content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        todo_area_content_layout = QHBoxLayout(todo_area_content)
+        
+        self.layout = QHBoxLayout(self)
+        
+        left_box = QVBoxLayout()
+        right_box = QVBoxLayout()
+        top_layout = QHBoxLayout()
+        bottom_layout = QHBoxLayout()
+        chech_box = QCheckBox()
+        chech_box.setStyleSheet(f"""
+            QCheckBox {{
+                border: 1px solid {parent.BORDER_COLOR};
+                background-color: {parent.PANEL_COLOR};
+                width: 26px;
+                height: 26px;
+                border-radius: 13px;  /* Yuvarlak yapma */
+                padding: 0px;
+                outline: none;
+            }}
+            QCheckBox:checked {{
+                background-color: {parent.GREEN};  /* Tıklanmış durumda yeşil arka plan */
+            }}
+            QCheckBox:indicator {{
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }}
+        """)
+        chech_box.setProperty("_id", self.todo_data["_id"])
+        chech_box.stateChanged.connect(parent.change_state_todos)
+        chech_box.setFixedSize(26, 26)
+        
+        todo_text_box = QLabel(self.todo_data["item_text"])
+        todo_text_box.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:17px;border:0;font-family: Arial, sans-serif;")
+        todo_date_text = QLabel(str(self.todo_data["date"]))
+        todo_date_text.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;")
+        todo_meet_header = QLabel(self.todo_data["meet_header"])
+        todo_meet_header.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;")
+
+        todo_meet_date =QLabel(str(self.todo_data["meet_date"]))
+        todo_meet_date.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;")
+        # todo_meet_date.setFixedWidth(75)
+
+        
+        # Layout eklemeleri
+        
+        top_layout.addWidget(todo_text_box,0,Qt.AlignLeft)
+        top_layout.addWidget(todo_date_text,0,Qt.AlignRight)
+        bottom_layout.addWidget(todo_meet_header)
+        bottom_layout.addWidget(todo_meet_date,0,Qt.AlignRight)
+        left_box.addWidget(chech_box)
+        right_box.addLayout(top_layout)
+        right_box.addLayout(bottom_layout)
+        todo_area_content_layout.addLayout(left_box)
+        todo_area_content_layout.addLayout(right_box)
+        self.layout.addWidget(todo_area_content)
+    def mouseDoubleClickEvent(self, event):
+        # Çift tıklama olayını burada yakalıyoruz
+        self.parent_class.Meet_Details(self.todo_data["meet_id"])
+        
+
 class SuperAdminMenu(QMainWindow):
     def __init__(self,THEME_ID,user,user_id,ws_id,perm):
         super().__init__()
@@ -116,6 +181,7 @@ class SuperAdminMenu(QMainWindow):
         self.frmdb = database["frm_list"]
         self.prsdb = database["person_list"]
         self.conversations = database['conversations']
+        self.todos = database['meet_to_do']
         self.contentpanel = None
         self.content_child_frame = None
         
@@ -227,12 +293,6 @@ class SuperAdminMenu(QMainWindow):
 
                                                     """
             if self.user_perm in ("Admin","Müdür"):
-                frmprs = QPushButton(" Kişiler")
-                frmprs.setStyleSheet(self.btnstyle)
-                frmprs.setFixedSize(MenuPanel.width()-5,50)
-                frmprs.setObjectName("4")
-                frmprs.clicked.connect(self.left_menu_click) 
-
                 new_desing = QPushButton(" Admin Menü")
                 new_desing.setStyleSheet(self.btnstyle)
                 new_desing.setFixedSize(MenuPanel.width()-5,50)
@@ -251,14 +311,22 @@ class SuperAdminMenu(QMainWindow):
             new_meet.setObjectName("6")
             new_meet.clicked.connect(self.left_menu_click) 
 
+            todos = QPushButton(" Yapılacaklar")
+            todos.setStyleSheet(self.btnstyle)
+            todos.setFixedSize(MenuPanel.width()-5,50)
+            todos.setObjectName("1")
+            todos.clicked.connect(self.left_menu_click) 
+
             ayarlar = QPushButton(" Ayarlar")
             ayarlar.setStyleSheet(self.btnstyle)
             ayarlar.setFixedSize(MenuPanel.width()-5,50)
             ayarlar.setObjectName("7")
             # self.ayarlar.clicked.connect(self.ayarlar_click) 
+
+            
             if self.user_perm in("Admin","Müdür") :
-                self.Menu_layout.addWidget(frmprs)
                 self.Menu_layout.addWidget(new_desing)
+            self.Menu_layout.addWidget(todos)
             self.Menu_layout.addWidget(reports)
             self.Menu_layout.addWidget(new_meet,0,Qt.AlignTop)
             self.Menu_layout.addWidget(ayarlar,0,Qt.AlignBottom)
@@ -311,17 +379,14 @@ class SuperAdminMenu(QMainWindow):
         self.content_child_frame.setStyleSheet(f"border-radius:0; border-bottom-left-radius:25px;")
         self.content_child_frame.move(0,39)
         self.content_child_frame.show()
-        
-        if buton_id == 4:#Kişiler Top Menü
-            btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
-            btn_menu.new_btn("Ekle",self.frm_prs_insert_panel)
-            btn_menu.new_btn("Güncelle",self.frm_prs_update_panel)
+        if buton_id == 1:#Kişisel Raporlar
+            self.self_todos()
         elif buton_id == 5:#Kişisel Raporlar
-            btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
             btn_menu.new_btn("Firma Bazlı",self.frm_based_report_panel)
             btn_menu.new_btn("Kiş Bazlı",self.person_based_report_panel)
         elif buton_id == 8:#Kişisel Raporlar
-            btn_menu = Content_Button_Menu(self.contentpanel,self.BORDER_COLOR,self.WIN_COLOR,self.FONT_COLOR,self.PANEL_COLOR,self.OS_RED,self.ON_HOVER_OS_RED)
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
             btn_menu.new_btn("Workspaces",self.workspace_list_panel)
             btn_menu.new_btn("Yetkiler",self.list_users_panel)
             btn_menu.new_btn("Firmalar",self.frm_list_panel)
@@ -340,128 +405,6 @@ class SuperAdminMenu(QMainWindow):
                     message=text,
                     app_name='OS_VPanel',
                 )
-
-    def workspace_combo_set_items(self,combobox,durum):#Çalışma alanı comboboxları için gereken güncelleme fonksiyonu
-        combobox.clear()
-        if durum == 1: # Sadece Ana Workspaceleri yazdırır
-            for item in self.workspacedb.find({'parent':0}):
-                combobox.addItem(item['name'],userData = item['_id'])
-        elif durum == 2:# hepsini ebevenyni ile yazdırır
-            sql = [
-                {
-                    '$lookup':{
-                        'from':'workspace_list',
-                        'localField':'parent',
-                        'foreignField': '_id',
-                        'as':'parent_name'
-                    }
-                },
-                {
-                    '$unwind':{
-                        'path':'$parent_name',
-                        'preserveNullAndEmptyArrays':True
-                    }
-                }]
-            for item in self.workspacedb.aggregate(sql):
-                if item['parent'] == 0:
-                    combobox.addItem("Main Workspace > "+item['name'],userData=item['_id'])
-                else:
-                    combobox.addItem(item["parent_name"]["name"]+" > "+item['name'],userData=item['_id'])
-        elif durum == 3:
-            sender = self.sender()
-            print(sender)
-            for item in self.workspacedb.find({'parent':sender.itemData(sender.currentIndex())}):
-                combobox.addItem(item['name'],userData=item['_id'])    
-
-    def change_combo_set_combo(self,combobox,durum,itemdata):# tasarım alanlarındaki comboboxları duruma göre yapılandırma
-        match durum:
-            case 1:# seçilen çalışma alanının altındakileri gösterir eğer seçilen item değilse resetler 
-                if itemdata == -1:
-                    combobox.clear()
-                    combobox.insertItem(0,"Please Parent Select First..",userData=0)
-                    combobox.setCurrentIndex(0)
-                elif isinstance(itemdata,int):
-                    combobox.clear()
-                    combobox.insertItem(0,"Select Any Workspace.",userData=0)
-                    combobox.setCurrentIndex(0)
-                    for item in self.workspacedb.find({'parent':int(itemdata)}):
-                        combobox.addItem(item['name'],userData=item['_id'])
-            case 2:# Textboxları comboboxın yazısı ile eşleme (güncelleme ekranlarında isim girmekle uğraşılmasın diye)
-                if itemdata == "reset":
-                    combobox.setText("")
-                    combobox.setPlaceholderText("Enter New Name..") 
-                else:
-                    combobox.setText(itemdata)
-            case 3:#
-                if itemdata == -1:
-                    combobox.clear()
-                    combobox.insertItem(0,"Please Workspace Select First..",userData=0)
-                    combobox.setCurrentIndex(0)
-                elif itemdata == 0:
-                    combobox.clear()
-                    sql = [
-                            {
-                                '$lookup':{
-                                    'from':'workspace_list',
-                                    'localField':'workspace_id',
-                                    'foreignField': '_id',
-                                    'as':'workspace_name'
-                                }
-                            },
-                            {
-                                '$unwind':{
-                                    'path':'$workspace_name',
-                                    'preserveNullAndEmptyArrays':True
-                                }
-                            }]
-                    combobox.insertItem(0,"select any user!",userData=0)
-                    for item in self.usersdatadb.aggregate(sql):
-                        combobox.addItem(item['real_name']+" - "+item['username']+" - "+item['workspace_name']['name']+" - "+item['permission'] ,userData=item['_id'])
-                elif isinstance(itemdata,int):
-                    combobox.clear()
-                    sql = [
-                            {
-                                '$lookup':{
-                                    'from':'workspace_list',
-                                    'localField':'workspace_id',
-                                    'foreignField': '_id',
-                                    'as':'workspace_name'
-                                }
-                            },
-                            {
-                                '$unwind':{
-                                    'path':'$workspace_name',
-                                    'preserveNullAndEmptyArrays':True
-                                }
-                            },
-                            {
-                                '$match':{
-                                    'workspace_id':int(itemdata)
-                                }
-                            }]
-                    combobox.insertItem(0,"select any user!",userData=0)
-                    for item in self.usersdatadb.aggregate(sql):
-                        combobox.addItem(item['real_name']+" - "+item['username']+" - "+item['workspace_name']['name']+" - "+item['permission'] ,userData=item['_id'])
-            case 4:# seçime bağlı firmaları listeler
-                if itemdata == 0:
-                    combobox.clear()
-                    combobox.insertItem(0,"Please Parent Select First..",userData=0)
-                    combobox.setCurrentIndex(0)
-                elif isinstance(itemdata,int):
-                    combobox.clear()
-                    combobox.insertItem(0,"Select any firm!",userData=0)
-                    for item in self.frmdb.find({'workspace_id':itemdata}):
-                        combobox.addItem(item['name'],userData=item['_id'])
-            case 5:
-                if itemdata == 0:
-                    combobox.clear()
-                    combobox.insertItem(0,"Please Parent Select First..",userData=0)
-                    combobox.setCurrentIndex(0)
-                elif isinstance(itemdata,int):
-                    combobox.clear()
-                    combobox.insertItem(0,"Select any person!",userData=0)
-                    for item in self.prsdb.find({'frm_id':itemdata}):
-                        combobox.addItem(item['fullname']+" - "+item['mail'],userData=item['_id'])
 
     def Style_Editable_Text(self,width:int,height:int,load_screen):
         dikey_layout= QVBoxLayout()
@@ -630,14 +573,168 @@ class SuperAdminMenu(QMainWindow):
         meet_text_area = QTextEdit()
         meet_text_area.setObjectName("MeetTextArea")
         meet_text_area.setStyleSheet(f"border:1px solid {self.BORDER_COLOR};color:{self.FONT_COLOR};font-family: Arial;background-color:{self.PANEL_COLOR};border-radius:0;")
-        meet_text_area.setFixedSize(width,height)
+        meet_text_area.setFixedSize(width,height-150)
         yatay_layout_4.addWidget(meet_text_area)
 
         dikey_layout.addLayout(yatay_layout_3)
         dikey_layout.addLayout(yatay_layout_4)
+        # ----------------------------------------------------------------------- TO DO -------------------------------------------
+        dikey_scroll_area=QScrollArea()
+        dikey_scroll_area.setStyleSheet(f"""QScrollBar:vertical {{
+                                    width: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:vertical {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+                                QScrollBar:horizontal {{
+                                    height: 0;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}
+                                QScrollArea{{border:0;}}""")
+        dikey_scroll_area.setFixedSize(width,150)
+        dikey_scroll_area.setWidgetResizable(True)
+        todo_area = QWidget()
+        todo_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        todo_area.setStyleSheet("border:0;")
+        todo_area.setFixedWidth(width-5)
+        todo_area_layout = QVBoxLayout(todo_area)
+        meet = self.findChildren(QFrame,"editmeet")
+        if meet:
+            meet = meet[0]
+            meet = meet.property("meet_id")
+            for todolist in self.todos.find({"meet_id":meet}):
+                todo_area_layout.addWidget(self.to_do_template(todolist["item_state"],todolist["item_text"],todolist["reminder_date"],"add_to_do",todolist["_id"]))
+
+        todo_area_layout.addWidget(self.to_do_template(False,"",datetime.today(),"new_to_do",0))
+        
+        dikey_scroll_area.setWidget(todo_area)
+        dikey_layout.addWidget(dikey_scroll_area)
+        
         return dikey_layout
+    
+    def to_do_template(self,checked:bool,text:str,date:datetime,widget_name:str,obj_id:int):
 
+        todo_area =QWidget()
+        todo_area.setFixedHeight(45)
+        todo_area.setObjectName(widget_name)
+        todo_area.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};border-radius:0;")
 
+        yatay_layout =QHBoxLayout()
+        chech_box =QCheckBox()
+        if checked:
+            chech_box.setCheckState(Qt.Checked)
+        else:
+            chech_box.setCheckState(Qt.Unchecked)  
+        chech_box.setFixedSize(26,26)
+        chech_box.setStyleSheet(f"""
+            QCheckBox {{
+                border: 1px solid {self.BORDER_COLOR};
+                background-color: {self.PANEL_COLOR};
+                width: 26px;
+                height: 26px;
+                border-radius: 13px;  /* Yuvarlak yapma */
+                padding: 0px;
+                outline: none;
+            }}
+            QCheckBox:checked {{
+                background-color: {self.GREEN};  /* Tıklanmış durumda yeşil arka plan */
+            }}
+            QCheckBox:indicator {{
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+            }}
+        """)
+        
+        todo_textbox = self.common_items(QLineEdit,"new_to_do","Enter To Do Text..(Optional)",200,25)
+        if widget_name == "new_to_do":
+            todo_textbox.returnPressed.connect(self.add_to_do)
+        todo_textbox.setText(text)
+        
+        date_picker = QDateEdit()
+        
+        date_picker.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.PANEL_COLOR};border-radius: 5px;color:{self.FONT_COLOR};")
+        date_picker.setFixedSize(100,25)
+        if widget_name == "new_to_do":
+            date_picker.setDate(QDate.currentDate())
+        elif widget_name == "add_to_do":
+            date_picker.setDate(date)
+        else:
+            date_picker.setDate(QDate(date.year, date.month, date.day))
+
+        
+        yatay_layout.addWidget(chech_box)
+        yatay_layout.addWidget(todo_textbox,0,Qt.AlignLeft)
+        yatay_layout.addWidget(date_picker,0,Qt.AlignRight)
+        if widget_name != "new_to_do":
+            meet = self.findChildren(QFrame,"editmeet")
+            delete_btn =QPushButton("X")
+            delete_btn.setStyleSheet(f""" QPushButton{{ border:0;font-size:13px;font-weight:bold;background-color:{self.WIN_COLOR};color:{self.FONT_COLOR}}}QPushButton:hover{{background-color:{self.PANEL_COLOR};border:1px solid {self.BORDER_COLOR}}}""")
+            delete_btn.setFixedSize(25,25)
+            if meet: 
+                delete_btn.setProperty("_id",obj_id)
+                meet = meet[0]
+                meet = meet.property("meet_id")
+                delete_btn.clicked.connect(self.delete_todo)     
+            else:
+                delete_btn.clicked.connect(lambda:delete_btn.parent().deleteLater())
+            yatay_layout.addWidget(delete_btn)
+        todo_area.setLayout(yatay_layout)
+        return(todo_area)
+
+    def delete_todo (self):
+        button = self.sender()
+        todo_id = button.property("_id")
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Maddeyi Silmek İstediğinize Emin Misiniz?")
+        msg.setWindowTitle("Bilgi Mesajı")
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)       
+        resp = msg.exec()
+        if resp == 1024:
+            self.todos.delete_one({"_id":todo_id})
+            button.parent().deleteLater()
+
+    def add_to_do(self):
+        if self.sender().parent().objectName() == "new_to_do":
+            check_state = self.sender().parent().findChildren(QCheckBox)[0].checkState()
+            todo_text = self.sender().parent().findChildren(QLineEdit)[0].text()
+            reminder_date_text = self.sender().parent().findChildren(QDateEdit)[0].date()
+            is_checked = check_state == Qt.Checked
+            meet = self.findChildren(QFrame,"editmeet")
+            if meet:
+                meet = meet[0]
+                meet = meet.property("meet_id")
+                data_id = self.todos.find().sort({"_id": -1}).limit(1).to_list()
+                if data_id:
+                    data_id = int(data_id[0]['_id'])+1
+                else:
+                    data_id = 1
+                is_checked = check_state == Qt.Checked
+                self.todos.insert_one({"_id":data_id,"meet_id":meet,"item_text":todo_text,"item_state":is_checked,"reminder_date":datetime(reminder_date_text.year(),reminder_date_text.month(),reminder_date_text.day())})
+                todo_area = self.to_do_template(is_checked,todo_text,reminder_date_text,"add_to_do",data_id)
+            else:
+                todo_area = self.to_do_template(is_checked,todo_text,reminder_date_text,"add_to_do",0)
+            parent_layout = self.sender().parent().parent().layout()
+            parent_layout.addWidget(todo_area)
+            self.sender().parent().deleteLater()
+            parent_layout.addWidget(self.to_do_template(False,"",datetime.today(),"new_to_do",0))
+            
     def common_items(self,widget:QWidget,widget_name:str,widget_text:str,widget_width:int,widget_height:int):#Panelde Tanımladığımız standart widgetları sürekli aynı kodları yazamamak için oluşturuldu
         if widget == QLineEdit:
             textbox = QLineEdit()
@@ -743,29 +840,49 @@ class SuperAdminMenu(QMainWindow):
 
     def set_combobox_items(self,set_combobox:QComboBox,process:str,self_combobox:QComboBox):#Bu adındanda analaşıalcağı gibi comboboboxlara sürekli tanımladığımız itemler için kullanılıyor ve combo değişince diğer combo itemlerini değiştirmede de kullanılıyor
         match process:
-            case "Ws_Parent_Set":
+            case "Ws_Parent_Set": # Ana Çalışma Alanlarını Listeler
                 set_combobox.clear()
                 set_combobox.addItem("Select Any Workspace",userData = -1)
                 set_combobox.addItem("Main Workspace",userData = 0)
                 for item in self.workspacedb.find({'parent':0}):
                     set_combobox.addItem(item['name'],userData = item['_id'])
-            case "Self_Ws_Child":
+            case "Self_Ws_Child": # Kişinin Tanımlı olduğu çalışma alanının alt gruplarını listeler
                 set_combobox.clear()
                 set_combobox.addItem("Select Any Workspace",userData = -1)
                 for item in self.workspacedb.aggregate([{"$match":{"$or":[{'parent':self.user_workspace_id},{"_id":self.user_workspace_id}]}}]):
                     set_combobox.addItem(item['name'],userData = item['_id'])
-            case "Select_Ws_Set_Ws":
+            case "Select_Ws_Set_Ws": # seçilen üst çalışma alanına göre alt çalışma alanını listeler
                 set_combobox.clear()
                 ws_parent = self_combobox.itemData(self_combobox.currentIndex())
                 set_combobox.addItem("Select Any Workspace",userData = -1)
                 for item in self.workspacedb.find({"parent":ws_parent}):
                     set_combobox.addItem(item["name"],userData = item['_id'])
-            case "Select_Ws_Set_Frm":
+            case "Select_Ws_Set_Frm":#Seçilen çalışma alanına göre firmaları listeler
                 set_combobox.clear()
                 ws = self_combobox.itemData(self_combobox.currentIndex())
                 set_combobox.addItem("Select Any Workspace",userData = 0)
                 for item in self.frmdb.find({"workspace_id":ws}):
                     set_combobox.addItem(item["name"],userData = item['_id'])
+            case "Self_Firm": # kişinin tanımlı olduğu çalışma alanına ait firmaları listeler alt alandaysa üst kısmı üst çalışma alanındaysa alt alanları listeler
+                set_combobox.clear()
+                set_combobox.addItem("Select Any Firm",userData = 0)
+                parent_ws = self.workspacedb.find_one({"_id":self.user_workspace_id})
+                if parent_ws["parent"] == 0:
+                    ws_ids = []
+                    for child_ws in self.workspacedb.find({"parent":self.user_workspace_id}):
+                        ws_ids.append(child_ws["_id"])
+                    ws_ids.append(self.user_workspace_id)
+                    for item in self.frmdb.find({"workspace_id": {"$in": ws_ids}}):
+                        set_combobox.addItem(item["name"],userData = item['_id'])
+                else:
+                    for item in self.frmdb.aggregate([{"$match":{"$or":[{"workspace_id":self.user_workspace_id},{"workspace_id":parent_ws["parent"]}]}}]):
+                        set_combobox.addItem(item["name"],userData = item['_id'])
+            case "Select_Frm_Set_Person": # Seçilen Firmaya ait kişileri listeler
+                set_combobox.clear()
+                set_combobox.addItem("Select Any Person",userData = 0)
+                Frm_id = self_combobox.itemData(self_combobox.currentIndex())
+                for item in self.prsdb.find({"frm_id":Frm_id}):
+                    set_combobox.addItem(item["fullname"] +" - "+item["mail"],userData = item['_id'])
 
     def Data_Control_Func(self,item:QWidget,process:str): # Kullanıcıdan gelen veri kontrol ettirme fonksiyonu
         match process:
@@ -774,59 +891,96 @@ class SuperAdminMenu(QMainWindow):
                     return True
                 else:
                     return False
+            case "Mail":
+                if item.count(" ") == 0 and item.count("@") ==1 and item.count(".") > 0 :
+                    return True
+                else:
+                    return False
 
 # ---------------------------------------------------------------------- Ortak Fonksiyonlar -----------------------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------ Ortak Widgetlar ------------------------------------------------------------------------------------------
-    def common_elements(self,widget_name:str,name:str):
-        frame_x = self.contentpanel.width()
-        match widget_name:
-            case "workspace_lister":
-                combobox = QComboBox()
-                combobox.setStyleSheet(self.combobox_style)
-                combobox.setFixedSize(frame_x-200, 25)
-                combobox.setObjectName(name)
-                self.workspace_combo_set_items(combobox,1)
-                combobox.insertItem(0,"Select Workspace Area..",userData=-1)
-                combobox.insertItem(1,"Main Workspaces",userData=0)
-                combobox.setCurrentIndex(0)
-                return combobox
-            case "clear_list_combo":
-                combobox = QComboBox()
-                combobox.setStyleSheet(self.combobox_style)
-                combobox.setFixedSize(frame_x-200, 25)
-                combobox.setObjectName(name)
-                combobox.insertItem(0,"Please Parent Select First..",userData=0)
-                combobox.setCurrentIndex(0)
-                return combobox
-            case "TextBox":
-                textbox = QLineEdit()
-                textbox.setFixedSize(frame_x-200,25)
-                textbox.setObjectName(name)
-                textbox.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.PANEL_COLOR};border-radius: 5px;color:{self.FONT_COLOR};")
-                textbox.setPlaceholderText("Enter New Name..")
-                return textbox
-            case "button_add":
-                btn = QPushButton("Ekle")
-                btn.setStyleSheet(self.normal_button)
-                btn.setFixedSize(100,30)
-                return btn
-            case "button_update":
-                btn = QPushButton("Güncelle")
-                btn.setStyleSheet(self.normal_button)
-                btn.setFixedSize(100,30)
-                return btn
-            case "ws_list":
-                combobox = QComboBox()
-                combobox.setStyleSheet(self.combobox_style)
-                combobox.setFixedSize(frame_x-200, 25)
-                combobox.setObjectName(name)
-                self.workspace_combo_set_items(combobox,1)
-                combobox.insertItem(0,"Select Any Workspace..",userData=0)
-                combobox.setCurrentIndex(0)
-                return combobox
-# ------------------------------------------------------------------------ Ortak Widgetlar ------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------- TO DO PANEL ----------------------------------------------------------------------------------
+    def change_state_todos(self):
+        checkbox = self.sender()
+        doc_id = checkbox.property("_id")
+        is_checked = checkbox.checkState() == Qt.Checked
+        self.todos.update_one({"_id":doc_id},{"$set":{"item_state":is_checked}})
+    
+    def self_todos(self):
+        if self.content_child_frame is not None:
+            for child in self.content_child_frame.findChildren(QWidget):
+                child.deleteLater()
+        if self.content_child_frame.layout():
+            QWidget().setLayout(self.content_child_frame.layout())
 
+        VFuncLayout = QVBoxLayout()
+        dikey_scroll_area=QScrollArea()
+        dikey_scroll_area.setStyleSheet(f"""QScrollBar:vertical {{
+                                    width: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:vertical {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+                                QScrollBar:horizontal {{
+                                    height: 0;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}
+                                QScrollArea{{border:0;}}""")
+        dikey_scroll_area.setFixedSize(self.content_child_frame.width()-12,self.content_child_frame.height()-20)
+        dikey_scroll_area.setWidgetResizable(True)
+        todo_area = QWidget()
+        todo_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        todo_area.setStyleSheet("border:0;")
+        todo_area_layout = QVBoxLayout(todo_area)
+        todo_area_layout.setContentsMargins(0,0,0,0)
+        sql =[ {
+                    '$lookup':{
+                        'from':'conversations',
+                        'localField':'meet_id',
+                        'foreignField': '_id',
+                        'as':'meet'
+                    }
+                },
+                {
+                    '$unwind':{
+                        'path':'$meet',
+                        'preserveNullAndEmptyArrays':True
+                    }
+                },
+                {'$project':{
+                    '_id':1,
+                    'meet_id':1,
+                    'item_text':1,
+                    'item_state':1,
+                    'date':{"$dateToString":{"format":"%Y-%m-%d","date":"$reminder_date"}},
+                    'user_id':'$meet.user_id',
+                    'meet_date':{"$dateToString":{"format":"%Y-%m-%d","date":'$meet.create_date'}},
+                    'meet_header':'$meet.cst_header'
+                }},
+                {'$match':{'user_id':self.user_id,'item_state':False}}]
+        for i in self.todos.aggregate(sql):
+            todo_item = TodoItem(i, parent=self)  # Her bir item için TodoItem widget'ı oluşturuyoruz
+            todo_area_layout.addWidget(todo_item)
+        dikey_scroll_area.setWidget(todo_area)
+        VFuncLayout.addWidget(dikey_scroll_area)
+        VFuncLayout.addSpacing(20)
+        self.content_child_frame.setLayout(VFuncLayout)
+# ---------------------------------------------------------------------- TO DO PANEL ----------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------- NEW MEET ---------------------------------------------------------------------------------------------
     def New_Meet_Menu(self):
         if self.content_child_frame is not None:
@@ -839,14 +993,11 @@ class SuperAdminMenu(QMainWindow):
         yatay_layout_1 = QHBoxLayout()
         frame_x = (self.contentpanel.width()-20)/2
 
-        frm_list = self.common_elements("clear_list_combo","frm_list")
-        frm_list.setFixedWidth(frame_x)
+        frm_list = self.common_items(QComboBox,"frm_list","Select Any Firm",frame_x,25)
+        person_list = self.common_items(QComboBox,"person_list","First Select Workspace",frame_x,25)
 
-        person_list = self.common_elements("clear_list_combo","person_list")
-        person_list.setFixedWidth(frame_x)
-
-        self.change_combo_set_combo(frm_list,4,self.user_workspace_id)
-        frm_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(person_list,5,frm_list.itemData(index)))
+        self.set_combobox_items(frm_list,"Self_Firm",frm_list)
+        frm_list.currentIndexChanged.connect(lambda :self.set_combobox_items(person_list,"Select_Frm_Set_Person",frm_list))
 
         yatay_layout_1.addWidget(frm_list)
         yatay_layout_1.addWidget(person_list)
@@ -855,9 +1006,7 @@ class SuperAdminMenu(QMainWindow):
 
         yatay_layout_2 = QHBoxLayout()
 
-        meet_header = self.common_elements("TextBox","meet_header")
-        meet_header.setFixedWidth(frame_x+100)
-        meet_header.setPlaceholderText("Enter Meet Header..")
+        meet_header = self.common_items(QLineEdit,"meet_header","Enter Meet Header..",frame_x+100,25)
 
         date_picker = QDateEdit()
         date_picker.setDate(QDate.currentDate())
@@ -905,6 +1054,28 @@ class SuperAdminMenu(QMainWindow):
                         data["create_date"]=meet_date_obj
                         data["file_create_date"]=datetime.now()
                         self.conversations.insert_one(data)
+                        meet = self.findChildren(QWidget,"add_to_do")
+                        if meet:
+                            for item in meet:
+                                data = {"_id":None,"meet_id":None,"item_text":None,"item_state":None,"reminder_date":None}
+                                todoid = self.todos.find().sort({"_id": -1}).limit(1).to_list()
+                                if todoid:
+                                    todoid = int(todoid[0]['_id'])+1
+                                else:
+                                    todoid = 1
+                                data["_id"]=todoid
+                                data["meet_id"] = data_id
+                                for item_child in item.children():
+                                    if isinstance(item_child, QCheckBox):
+                                        is_checked = item_child.checkState() == Qt.Checked
+                                        data["item_state"] = is_checked
+                                    elif isinstance(item_child, QLineEdit):
+                                        data["item_text"] = item_child.text()
+                                    elif isinstance(item_child, QDateEdit):
+                                        date = item_child.date()
+                                        data["reminder_date"] = datetime(date.year(),date.month(),date.day())
+                                self.todos.insert_one(data)
+
                         self.bildirim("Toplantı Oluşturulmuştur!!")
                         self.New_Meet_Menu()
                 else:
@@ -915,6 +1086,23 @@ class SuperAdminMenu(QMainWindow):
             meet_id = meet_id.property("meet_id")  
             textbox = textbox.toHtml()
             self.conversations.update_one({"_id":meet_id},{"$set":{"file_data":textbox}})
+            meet = self.findChildren(QWidget,"add_to_do")
+            if meet:
+                for item in meet:
+                    data ={"_id":None,"item_text":None,"item_state":None,"reminder_date":None}
+                    for item_child in item.children():
+                        if isinstance(item_child, QCheckBox):
+                            is_checked = item_child.checkState() == Qt.Checked
+                            data["item_state"] = is_checked
+                        elif isinstance(item_child, QLineEdit):
+                            data["item_text"] = item_child.text()
+                        elif isinstance(item_child, QDateEdit):
+                            date = item_child.date()
+                            data["reminder_date"] = datetime(date.year(),date.month(),date.day())
+                        elif isinstance(item_child, QPushButton):
+                            todoid = item_child.property("_id")
+                            data["_id"] = todoid
+                    self.todos.update_one({"_id":data["_id"]},{"$set":{"item_text":data["item_text"],"item_state":data["item_state"],"reminder_date":data["reminder_date"]}})
             self.bildirim("Toplantı Notu Güncellendi!!")
         
     def MeetTextStyleFunction(self):
@@ -1013,16 +1201,13 @@ class SuperAdminMenu(QMainWindow):
         yatay_layout = QHBoxLayout()
         frame_x = (self.contentpanel.width()-20)/2
 
-        frm_list = self.common_elements("clear_list_combo","frm_list")
-        frm_list.setFixedWidth(frame_x)
-
-        self.change_combo_set_combo(frm_list,4,self.user_workspace_id)
-        frm_list.currentIndexChanged.connect(self.person_based_report)
+        frm_list = self.common_items(QComboBox,"frm_list","Select Any Firm",frame_x,25)
+        self.set_combobox_items(frm_list,"Self_Firm",frm_list)
 
         yatay_layout.setAlignment(Qt.AlignTop)
         yatay_layout.addWidget(frm_list)
 
-        date_db = self.common_elements("clear_list_combo","date")
+        date_db = self.common_items(QComboBox,"date","Select Any Date",frame_x,25)
         date_db.clear()
         sql=[{
             "$project":{
@@ -1053,8 +1238,6 @@ class SuperAdminMenu(QMainWindow):
                     date_db.addItem(str(i),userData=int(i)) 
                     date_db.currentIndexChanged.connect(self.person_based_report)
         
-        
-
         date_db.setFixedWidth(frame_x)
         yatay_layout.addWidget(date_db)
         dikey_layout.addLayout(yatay_layout)
@@ -1478,7 +1661,7 @@ class SuperAdminMenu(QMainWindow):
         MenuPanel.move(0,37)
         MenuPanel.show()
 
-    def Meet_Details(self):
+    def Meet_Details(self,meet_id=None):
         MenuPanel = QFrame(self)
         MenuPanel.setFixedSize(self.width(),763)
         MenuPanel.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.WIN_COLOR};border-radius:10px;border-top-left-radius:0px;border-top-right-radius:0px;border-top:0;")
@@ -1509,9 +1692,11 @@ class SuperAdminMenu(QMainWindow):
         Content_Panel.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.WIN_COLOR};border-radius:10px;border-top-left-radius:0px;border-top-right-radius:0px;")
         Content_Panel.show()
         Content_Panel.move(0,35)
-
-        button = self.sender()
-        button_id = button.property("_id")  
+        if meet_id is False:
+            button = self.sender()
+            button_id = button.property("_id")  
+        else:
+            button_id = meet_id
         Content_Panel.setProperty("meet_id",button_id)
         conversation_text = self.conversations.find_one({"_id":button_id})
         if conversation_text['user_id'] == self.user_id:
@@ -1543,7 +1728,7 @@ class SuperAdminMenu(QMainWindow):
         yatay_layout = QHBoxLayout()
         frame_x = (self.contentpanel.width()-20)/2
 
-        date_db = self.common_elements("clear_list_combo","date")
+        date_db = self.common_items(QComboBox,"date","Select Any Date",frame_x,25)
         date_db.clear()
         sql=[{
             "$project":{
@@ -1574,8 +1759,6 @@ class SuperAdminMenu(QMainWindow):
                 for i in range(min_year,max_year+1):
                     date_db.addItem(str(i),userData=int(i)) 
 
-
-        date_db.setFixedWidth(frame_x)
         date_db.currentIndexChanged.connect(self.frm_based_report)
         yatay_layout.setAlignment(Qt.AlignTop)
         yatay_layout.addWidget(date_db,0,Qt.AlignCenter)
@@ -1909,146 +2092,10 @@ class SuperAdminMenu(QMainWindow):
 # ---------------------------------------------------------------------------- Raporlar ---------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------ Kişiler Paneli -------------------------------------------------------------------------------------------
-    def frm_prs_insert_panel(self):
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout()) 
- 
-        dikey_layout = QVBoxLayout(self.content_child_frame)
-
-        workspace_lister = self.common_elements("workspace_lister","item1")
-        ws_list = self.common_elements("clear_list_combo","item2")
-        frm_list = self.common_elements("clear_list_combo","frm_list")
-        prs_name = self.common_elements("TextBox","prs_name")
-        prs_mail = self.common_elements("TextBox","prs_mail")
-        btn = self.common_elements("button_add","btn")
-
-        prs_mail.textChanged.connect(self.to_lower_case)
-        workspace_lister.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list,1,workspace_lister.itemData(index)))
-        ws_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(frm_list,4,ws_list.itemData(index)))
-        prs_mail.setPlaceholderText("Enter person mail..")
-        btn.clicked.connect(self.insert_person_btn_click)
-
-        dikey_layout.setAlignment(Qt.AlignCenter)
-        dikey_layout.addWidget(workspace_lister)
-        dikey_layout.addWidget(ws_list)
-        dikey_layout.addWidget(frm_list)
-        dikey_layout.addWidget(prs_name)
-        dikey_layout.addWidget(prs_mail)
-        dikey_layout.addWidget(btn,0,Qt.AlignCenter)
-        dikey_layout.addSpacing(150)
-
-        self.content_child_frame.setLayout(dikey_layout)
-
     def to_lower_case(self):
         textbox = self.sender()
         text = textbox.text()
         textbox.setText(text.lower())
-
-    def insert_person_btn_click(self):
-        frm_id = self.content_child_frame.findChildren(QComboBox,"frm_list")[0]
-        frm_id = frm_id.itemData(frm_id.currentIndex())
-        prs_name = self.content_child_frame.findChildren(QLineEdit,"prs_name")[0].text()
-        prs_mail = self.content_child_frame.findChildren(QLineEdit,"prs_mail")[0].text()
-        if frm_id != 0:
-            if prs_mail.count(" ") == 0 and prs_mail.count("@") ==1 and prs_mail.count(".") > 0 and prs_mail :
-                if self.prsdb.count_documents({'mail':prs_mail,'frm_id':frm_id}) == 0:
-                    if prs_name.count(" ") != len(prs_name) and prs_name[0] != " ":
-                        data = {"_id":"","fullname":"","mail":"","frm_id":""}
-                        data_id = self.prsdb.find().sort({"_id": -1}).limit(1).to_list()
-                        if data_id:
-                            data_id = int(data_id[0]['_id'])+1
-                        else:
-                            data_id = 1
-                        data['_id'] = data_id
-                        data['fullname'] = prs_name
-                        data['mail'] = prs_mail
-                        data['frm_id'] = frm_id
-                        self.prsdb.insert_one(data)
-                        self.bildirim(f'{prs_name} adlı kişi Eklenmiştir.')
-                        self.frm_prs_insert_panel()
-                    else:
-                        self.bildirim("Kişi adı boşluk olamaz veya boşluk ile başlayamaz!!")
-                else:
-                    self.bildirim("Bu kullanıcı zaten ekli!!")
-            else:
-                self.bildirim("Uygun bir mail adresi giriniz.")
-        else:
-            self.bildirim("Önce Kişinin ekleneceği firmayı seçiniz!")
-
-    def frm_prs_update_panel(self):
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout()) 
- 
-        dikey_layout = QVBoxLayout(self.content_child_frame)
-
-        workspace_lister = self.common_elements("workspace_lister","item1")
-        ws_list = self.common_elements("clear_list_combo","item2")
-        frm_list = self.common_elements("clear_list_combo","frm_id")
-        prs_list = self.common_elements("clear_list_combo","prs_list")
-        prs_name = self.common_elements("TextBox","prs_name")
-        prs_mail = self.common_elements("TextBox","prs_mail")
-        workspace_lister2 = self.common_elements("workspace_lister","item3")
-        ws_list2 = self.common_elements("clear_list_combo","item4")
-        new_frm_list = self.common_elements("clear_list_combo","new_frm_id")
-        btn = self.common_elements("button_update","btn")
-
-        prs_mail.textChanged.connect(self.to_lower_case)
-        workspace_lister.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list,1,workspace_lister.itemData(index)))
-        ws_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(frm_list,4,ws_list.itemData(index)))
-        frm_list.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(prs_list,5,frm_list.itemData(index)))
-        prs_mail.setPlaceholderText("Enter person mail..")
-        workspace_lister2.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(ws_list2,1,workspace_lister2.itemData(index)))
-        ws_list2.currentIndexChanged.connect(lambda index:self.change_combo_set_combo(new_frm_list,4,ws_list2.itemData(index)))
-        btn.clicked.connect(self.frm_prs_update_btn_click)
-
-        dikey_layout.setAlignment(Qt.AlignCenter)
-        dikey_layout.addWidget(workspace_lister)
-        dikey_layout.addWidget(ws_list)
-        dikey_layout.addWidget(frm_list)
-        dikey_layout.addSpacing(25)
-        dikey_layout.addWidget(prs_list)
-        dikey_layout.addWidget(prs_name)
-        dikey_layout.addWidget(prs_mail)
-        dikey_layout.addSpacing(25)
-        dikey_layout.addWidget(workspace_lister2)
-        dikey_layout.addWidget(ws_list2)
-        dikey_layout.addWidget(new_frm_list)
-        dikey_layout.addWidget(btn,0,Qt.AlignCenter)
-        dikey_layout.addSpacing(25)
-
-        self.content_child_frame.setLayout(dikey_layout)
-
-    def frm_prs_update_btn_click(self):
-        prs_id = self.content_child_frame.findChildren(QComboBox,"prs_list")[0]
-        prs_id = prs_id.itemData(prs_id.currentIndex())
-        prs_name = self.content_child_frame.findChildren(QLineEdit,"prs_name")[0].text()
-        prs_mail = self.content_child_frame.findChildren(QLineEdit,"prs_mail")[0].text()
-        new_frm_id = self.content_child_frame.findChildren(QComboBox,"new_frm_id")[0]
-        new_frm_id = new_frm_id.itemData(new_frm_id.currentIndex())
-        if prs_id != 0:
-            if prs_mail.count(" ") == 0 and prs_mail.count("@") ==1 and prs_mail.count(".") > 0 and prs_mail :
-                if prs_name.count(" ") != len(prs_name) and prs_name[0] != " ":
-                    cursor = self.prsdb.find_one({'mail':prs_mail,'frm_id':new_frm_id})
-                    if cursor["_id"] == prs_id:
-                        self.prsdb.update_one({'_id':prs_id},{'$set':{'fullname':prs_name,'mail':prs_mail,"frm_id":new_frm_id}})
-                        self.bildirim(f'{prs_name} adlı güncellenmiştir.')
-                        self.frm_prs_update_panel()            
-                    else:
-                        self.bildirim("Kişi zaten ekli!!")
-                else:
-                    self.bildirim("Kişi adı boşluk olamaz veya boşluk ile başlayamaz!!")
-            else:
-                self.bildirim("Uygun bir mail adresi giriniz.")
-        else:
-            self.bildirim("Önce Kişinin ekleneceği firmayı seçiniz!")
 
     def frm_prsn_list_panel(self):
         if self.content_child_frame is not None:
@@ -2217,7 +2264,7 @@ class SuperAdminMenu(QMainWindow):
             doc_id = button.property("_id")
             del_btn = self.common_items(QPushButton,"del_btn","Sil",50,30)
             del_btn.setProperty("_id",doc_id)
-            del_btn.clicked.connect(None)
+            del_btn.clicked.connect(self.frm_prsn_process)
             btn_menu_layout.addWidget(del_btn,0,Qt.AlignRight)
         btn_menu.setLayout(btn_menu_layout)
         Frame_layout1.addWidget(btn_menu)
@@ -2243,6 +2290,7 @@ class SuperAdminMenu(QMainWindow):
         Frame_layout2.addWidget(frm_list,0,Qt.AlignCenter)
         prs_name = self.common_items(QLineEdit,"prs_name","Enter Person Name!",parent_width-200,25)
         prs_mail = self.common_items(QLineEdit,"prs_mail","Enter Person Mail!",parent_width-200,25)
+        prs_mail.textChanged.connect(self.to_lower_case)
         Frame_layout2.addWidget(prs_name,0,Qt.AlignCenter)
         Frame_layout2.addWidget(prs_mail,0,Qt.AlignCenter)
         
@@ -2272,9 +2320,15 @@ class SuperAdminMenu(QMainWindow):
                 if item == frm_id:
                     frm_list.setCurrentIndex(i)
                     break
+            update_btn = self.common_items(QPushButton,"update_btn","Güncelle",100,30)
+            update_btn.setProperty("_id",doc_id)
+            update_btn.clicked.connect(self.frm_prsn_process)
+            Frame_layout2.addWidget(update_btn,0,Qt.AlignCenter)
             
         elif button_name == "add":
-            None 
+            add_btn = self.common_items(QPushButton,"add_btn","Ekle",100,30)
+            add_btn.clicked.connect(self.frm_prsn_process)
+            Frame_layout2.addWidget(add_btn,0,Qt.AlignCenter) 
 
 
         Frame_layout.addLayout(Frame_layout1)
@@ -2282,6 +2336,68 @@ class SuperAdminMenu(QMainWindow):
         Frame_layout.addSpacing(400)
         Frame.setLayout(Frame_layout)
         Frame.show()
+    
+    def frm_prsn_process (self):
+        button = self.sender()
+        button_name = button.objectName()
+        
+        if button_name in ("add_btn","update_btn"):
+            prs_name = self.content_child_frame.findChildren(QLineEdit,"prs_name")[0].text()
+            prs_mail = self.content_child_frame.findChildren(QLineEdit,"prs_mail")[0].text()
+            frm_id = self.content_child_frame.findChildren(QComboBox,"item_frm_list")[0]
+            frm_id = frm_id.itemData(frm_id.currentIndex())
+            if frm_id > 0:
+                if self.Data_Control_Func(prs_mail,"Mail"):
+                    if self.Data_Control_Func(prs_name,"Space"):
+                        if button_name == "add_btn":
+                            data = {"_id":"","fullname":"","mail":"","frm_id":""}
+                            data_id = self.prsdb.find().sort({"_id": -1}).limit(1).to_list()
+                            if data_id:
+                                data_id = int(data_id[0]['_id'])+1
+                            else:
+                                data_id = 1
+                            data['_id'] = data_id
+                            data['fullname'] = prs_name
+                            data['mail'] = prs_mail
+                            data['frm_id'] = frm_id
+                            self.prsdb.insert_one(data)
+                            self.bildirim(f'{prs_name} adlı kişi Eklenmiştir.')
+                        else:
+                            self.prsdb.update_one({'_id':button.property("_id")},{'$set':{'fullname':prs_name,'mail':prs_mail,"frm_id":frm_id}})
+                            self.bildirim('Kişi Güncellenmiştir')   
+                        Frame = self.content_child_frame.findChildren(QFrame,"frm_prs_item")
+                        if Frame:
+                            Frame= Frame[0]
+                            Frame.deleteLater()
+                        self.frm_prsn_list_panel()
+                    else:
+                        self.bildirim("Kişi Adı boşluk olamaz veya boşlukla başlayamaz!")
+                else:
+                    self.bildirim("Geçerli bir e-posta giriniz!")
+            else:
+                self.bildirim("Geçerli bir firma seçiniz!")
+
+        else:
+            doc_id = button.property("_id")
+            meet_count = self.conversations.count_documents({'person_id':doc_id})
+            if meet_count > 0:
+                self.bildirim("Kişiye Tanımlı Toplantılar olduğundan kişi silinemez!")
+            else:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Information)
+                msg.setText("Kişiyi silmek istediğinize emin misiniz?")
+                msg.setWindowTitle("Bilgi Mesajı")
+                msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)       
+                resp = msg.exec()
+                if resp == 1024:
+                    self.prsdb.delete_one({"_id":doc_id})
+                    Frame = self.content_child_frame.findChildren(QFrame,"frm_prs_item")
+                    if Frame:
+                        Frame= Frame[0]
+                        Frame.deleteLater()
+                    self.frm_prsn_list_panel()
+        
+
 # ------------------------------------------------------------------------ Kişiler Paneli -------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------- Firma Paneli --------------------------------------------------------------------------------------------
@@ -2523,7 +2639,7 @@ class SuperAdminMenu(QMainWindow):
                 if prs_count == 0 : # Firmaya Kişi Ekli değilse silsin
                     msg = QMessageBox()
                     msg.setIcon(QMessageBox.Information)
-                    msg.setText("Firmayı istediğinize emin misiniz?")
+                    msg.setText("Firmayı silmek istediğinize emin misiniz?")
                     msg.setWindowTitle("Bilgi Mesajı")
                     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)       
                     resp = msg.exec()
@@ -2727,7 +2843,10 @@ class SuperAdminMenu(QMainWindow):
         Frame_layout2.setSpacing(5)
         
         user_fullname = self.common_items(QLineEdit,"user_fullname","Enter User Real Name",parent_width-200,25)
+        mail = self.common_items(QLineEdit,"user_item_mail","Enter User Mail..(Optional)",parent_width-200,25)
+        mail.textChanged.connect(self.to_lower_case)
         Frame_layout2.addWidget(user_fullname) 
+        Frame_layout2.addWidget(mail) 
         perms = ["Admin","Müdür","Personel","Yetkisiz","Gereksiz"]    
         perm_combo = self.common_items(QComboBox,"item_panel_perm_list","Select User Permission",parent_width-200,25)
 
@@ -2764,6 +2883,7 @@ class SuperAdminMenu(QMainWindow):
             doc_id = button.property("_id")
             self_item = self.usersdatadb.find_one({"_id":doc_id})
             user_fullname.setText(self_item["real_name"])
+            mail.setText(self_item["mail"])
             if self.user_perm == "Admin":
                 ws_parent =self.workspacedb.find_one({"_id":self_item["workspace_id"]})
                 for i in range(workspace_lister.count()):
@@ -2803,11 +2923,17 @@ class SuperAdminMenu(QMainWindow):
         workspace_id = self.content_child_frame.findChildren(QComboBox,"workspace_list")[0]
         workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))  
         perm = self.content_child_frame.findChildren(QComboBox,"item_panel_perm_list")[0].currentText()
-        if self.Data_Control_Func(user_fullname,"Space"):
+        user_mail = self.content_child_frame.findChildren(QComboBox,"user_item_mail")[0].currentText()
+        mail_state=True
+        if user_mail is not None:
+            mail_state = self.Data_Control_Func(user_mail,"Mail")
+        else:
+            self.bildirim("Lütfen geçerli bir mail adresini giriniz!")
+        if self.Data_Control_Func(user_fullname,"Space") and mail_state:
             if workspace_id != 0:
                 if perm in ["Admin","Müdür","Personel","Gereksiz","Yetkisiz"]:
                     if button_name == "update":
-                        self.usersdatadb.update_one({'_id':button.property("_id")},{'$set':{'real_name':user_fullname,'workspace_id':workspace_id,'permission':perm}})
+                        self.usersdatadb.update_one({'_id':button.property("_id")},{'$set':{'real_name':user_fullname,'workspace_id':workspace_id,'permission':perm,'mail':user_mail}})
                         self.bildirim("Kullanıcı Güncellenmiştir!!") 
                         Frame = self.content_child_frame.findChildren(QFrame,"users_item")
                         if Frame:
@@ -2834,6 +2960,7 @@ class SuperAdminMenu(QMainWindow):
                             data['real_name'] = user_fullname
                             data['workspace_id'] = workspace_id
                             data['permission'] = perm
+                            data["mail"] = user_mail
                             self.usersdatadb.insert_one(data)
                             self.bildirim(f"{user_fullname} adlı kişi yetkilendirilmiştir.")
                             Frame = self.content_child_frame.findChildren(QFrame,"users_item")
