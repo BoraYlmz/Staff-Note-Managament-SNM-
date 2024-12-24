@@ -10,7 +10,7 @@ import os
 import json
 from pymongo import MongoClient
 import certifi
-from datetime import datetime
+from datetime import datetime,timedelta
 import configparser
 import getpass
 import subprocess
@@ -157,6 +157,51 @@ class TodoItem(QWidget):
         # Çift tıklama olayını burada yakalıyoruz
         self.parent_class.Meet_Details(self.todo_data["meet_id"])
         
+class Upcome_Meets_Item(QWidget):
+    def __init__(self, meet_data, parent=None):
+        super().__init__(parent)
+        self.meetdata = meet_data  # Gelen veriyi sakla
+        self.setFixedSize(parent.content_child_frame.width() - 25, 70)
+        self.parent_class = parent
+        
+        todo_area_content = QWidget()   
+        todo_area_content.setStyleSheet(f"border:1px solid {parent.BORDER_COLOR};border-radius:0;")
+        todo_area_content.setFixedSize(self.width()-10, self.height()-10)
+        todo_area_content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        todo_area_content_layout = QHBoxLayout(todo_area_content)
+        
+        self.layout = QHBoxLayout(self)
+        
+        left_box = QVBoxLayout()
+        right_box = QVBoxLayout()
+        top_layout = QHBoxLayout()
+        bottom_layout = QHBoxLayout()
+        
+        Meet_Header = QLabel(self.meetdata["cst_header"])
+        Meet_Header.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:17px;border:0;font-family: Arial, sans-serif;font-weight:bold;")
+        frm_name = QLabel(str(self.meetdata["frm_name"]))
+        frm_name.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;")
+        person_name = QLabel(self.meetdata["person_name"])
+        person_name.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;")
+
+        meet_date =QLabel(str(self.meetdata["create_date"]))
+        meet_date.setStyleSheet(f"color:{parent.FONT_COLOR};font-size:13px;border:0;font-family: Arial, sans-serif;font-weight:bold;")
+
+        top_layout.addWidget(Meet_Header,0,Qt.AlignLeft)
+        bottom_layout.addWidget(person_name)
+        bottom_layout.addSpacing(300)
+        bottom_layout.addWidget(frm_name,0,Qt.AlignRight)
+        right_box.addWidget(meet_date,0,Qt.AlignCenter)
+
+        left_box.addLayout(top_layout)
+        left_box.addLayout(bottom_layout)
+        todo_area_content_layout.addLayout(left_box)
+        
+        todo_area_content_layout.addLayout(right_box)
+        self.layout.addWidget(todo_area_content)
+    def mouseDoubleClickEvent(self, event):
+        # Çift tıklama olayını burada yakalıyoruz
+        self.parent_class.Meet_Details(self.meetdata["_id"])
 
 class SuperAdminMenu(QMainWindow):
     def __init__(self,THEME_ID,user,user_id,ws_id,perm):
@@ -305,13 +350,7 @@ class SuperAdminMenu(QMainWindow):
             reports.setObjectName("5")
             reports.clicked.connect(self.left_menu_click) 
 
-            new_meet = QPushButton(" Yeni Toplantı")
-            new_meet.setStyleSheet(self.btnstyle)
-            new_meet.setFixedSize(MenuPanel.width()-5,50)
-            new_meet.setObjectName("6")
-            new_meet.clicked.connect(self.left_menu_click) 
-
-            todos = QPushButton(" Yapılacaklar")
+            todos = QPushButton(" Toplantılarım")
             todos.setStyleSheet(self.btnstyle)
             todos.setFixedSize(MenuPanel.width()-5,50)
             todos.setObjectName("1")
@@ -328,7 +367,6 @@ class SuperAdminMenu(QMainWindow):
                 self.Menu_layout.addWidget(new_desing)
             self.Menu_layout.addWidget(todos)
             self.Menu_layout.addWidget(reports)
-            self.Menu_layout.addWidget(new_meet,0,Qt.AlignTop)
             self.Menu_layout.addWidget(ayarlar,0,Qt.AlignBottom)
 
             spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)  # Yatay, Dikey
@@ -380,7 +418,11 @@ class SuperAdminMenu(QMainWindow):
         self.content_child_frame.move(0,39)
         self.content_child_frame.show()
         if buton_id == 1:#Kişisel Raporlar
-            self.self_todos()
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
+            btn_menu.new_btn("Liste",self.my_meets)
+            btn_menu.new_btn("Yaklaşan",self.upcoming_meets)
+            btn_menu.new_btn("Yapılacak",self.self_todos)
+            
         elif buton_id == 5:#Kişisel Raporlar
             btn_menu = Content_Button_Menu(self.contentpanel,self)
             btn_menu.new_btn("Firma Bazlı",self.frm_based_report_panel)
@@ -392,8 +434,6 @@ class SuperAdminMenu(QMainWindow):
             btn_menu.new_btn("Firmalar",self.frm_list_panel)
             btn_menu.new_btn("Kişiler",self.frm_prsn_list_panel)
             btn_menu.new_btn("Tara",self.scan_locale_user_data)
-        elif buton_id == 6:#Kişiler Top Menü
-            self.New_Meet_Menu()
 
         Menu_layout = QVBoxLayout(self.contentpanel)
         Menu_layout.setContentsMargins(0,0,0,0)
@@ -760,7 +800,7 @@ class SuperAdminMenu(QMainWindow):
     
     def Create_Table_Set_Items(self,widget:QWidget,widget_text,widget_width:int,widget_height:int,parent):
         if widget == QTableWidget:
-            tablo = CustomTableWidget(1,len(widget_text),parent)
+            tablo = CustomTableWidget(1,len(widget_text)-1,parent)
             tablo_style = f"""QTableWidget{{
                                 border-radius:0;
                                 color:{self.FONT_COLOR};
@@ -803,10 +843,23 @@ class SuperAdminMenu(QMainWindow):
 
                                 QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
                                     background: none;            /* Ok işaretlerinin görünmemesi için */
-                                }}"""
+                                }}
+                                QHeaderView {{
+                                    background-color: {self.WIN_COLOR};
+                                    border-radius:0;
+                                }}
+                                QHeaderView::section {{
+                                background-color: {self.BORDER_COLOR}; 
+                                color: {self.FONT_COLOR};                           
+                                font-weight: bold;          
+                                border: 1px solid black;
+                                border-top:0;
+                                border-radius:0;   
+                                text-align: center;          
+                            }}"""
             tablo.setStyleSheet(tablo_style)
             tablo.horizontalHeader().setVisible(False)
-            tablo.verticalHeader().setVisible(False)
+            # tablo.verticalHeader().setVisible(False)
             tablo.setFixedSize(widget_width,widget_height)
             tablo.move(0,0)
             tablo.show()
@@ -983,13 +1036,22 @@ class SuperAdminMenu(QMainWindow):
 # ---------------------------------------------------------------------- TO DO PANEL ----------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------- NEW MEET ---------------------------------------------------------------------------------------------
     def New_Meet_Menu(self):
-        if self.content_child_frame is not None:
-            for child in self.content_child_frame.findChildren(QWidget):
-                child.deleteLater()
-        if self.content_child_frame.layout():
-            QWidget().setLayout(self.content_child_frame.layout())
+        Frame = self.content_child_frame.findChildren(QFrame,"new_meet_menu")
+        if Frame:
+            Frame= Frame[0]
+            Frame.deleteLater()     
+        Frame = QFrame(self.content_child_frame)
+        Frame.setFixedSize(self.content_child_frame.width(),self.content_child_frame.height())   
+        Frame.setObjectName("new_meet_menu")
+        dikey_layout = QVBoxLayout()
+        
+        btn_menu_layout =QHBoxLayout()
+        btn_menu_layout.setContentsMargins(0,0,0,0)
+        btn_menu_layout.setSpacing(0)
 
-        dikey_layout = QVBoxLayout(self.content_child_frame)
+        back_btn = self.custom_color_common_items(QPushButton,"back_btn","<",35,34,self.WIN_COLOR,self.PANEL_COLOR)
+        back_btn.clicked.connect(lambda:Frame.deleteLater())
+        btn_menu_layout.addWidget(back_btn,0,Qt.AlignLeft)
         yatay_layout_1 = QHBoxLayout()
         frame_x = (self.contentpanel.width()-20)/2
 
@@ -1018,14 +1080,15 @@ class SuperAdminMenu(QMainWindow):
         yatay_layout_2.addWidget(date_picker)
 
         yatay_layout_3= self.Style_Editable_Text(self.contentpanel.width()-20,550,"New_Meet")
-
+        dikey_layout.addLayout(btn_menu_layout)
         dikey_layout.addLayout(yatay_layout_1)
         dikey_layout.addLayout(yatay_layout_2)
         dikey_layout.addLayout(yatay_layout_3)
+        Frame.setLayout(dikey_layout)
 
-        self.content_child_frame.setLayout(dikey_layout)
+        Frame.show()
     
-    def new_meet(self):
+    def new_meet(self):# Toplantıyı veritabanına kaydeder
         button_name = self.sender().objectName()
         if button_name == "New_Meet":
                 textbox = self.content_child_frame.findChildren(QTextEdit,"MeetTextArea")[0]
@@ -1077,7 +1140,8 @@ class SuperAdminMenu(QMainWindow):
                                 self.todos.insert_one(data)
 
                         self.bildirim("Toplantı Oluşturulmuştur!!")
-                        self.New_Meet_Menu()
+                        self.my_meets()
+                        
                 else:
                     self.bildirim("Lütfen Bir Kişi seçiniz")
         elif button_name == "Edit_Text":
@@ -1105,7 +1169,7 @@ class SuperAdminMenu(QMainWindow):
                     self.todos.update_one({"_id":data["_id"]},{"$set":{"item_text":data["item_text"],"item_state":data["item_state"],"reminder_date":data["reminder_date"]}})
             self.bildirim("Toplantı Notu Güncellendi!!")
         
-    def MeetTextStyleFunction(self):
+    def MeetTextStyleFunction(self):#Seçilen still işlemini uygulayan fonksiyon
         process = self.sender().objectName()
 
         textbox = self.findChildren(QTextEdit,"MeetTextArea")[0]
@@ -1188,7 +1252,222 @@ class SuperAdminMenu(QMainWindow):
         cursor.mergeCharFormat(fmt)
         textbox.setTextCursor(cursor)
 # ---------------------------------------------------------------------------- NEW MEET ---------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------  MEET ---------------------------------------------------------------------------------------------
+    def my_meets(self):
+        tablo = self.content_child_frame.findChildren(QTableWidget,"My_Meets")
+        if tablo:
+            tablo= tablo[0]
+            tablo.deleteLater()
 
+        frame_x = self.contentpanel.width()
+        frame_y = self.contentpanel.height()
+        header = ['Kişi Adı','Mail','Firma','Toplantı Başlığı','Toplantı Tarihi','Toplantı Oluşturma Tarihi','']
+        tablo =self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-60,self.content_child_frame)
+        tablo.setObjectName("My_Meets")
+        tablo.move(0,0)
+        for col in range(len(header)):
+            if col == 0:
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
+        add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",75,29,self.GREEN,self.ON_HOVER_GREEN)
+        add_btn.clicked.connect(self.New_Meet_Menu)
+        tablo.setCellWidget(0,5,add_btn)
+        sql = [
+            {
+                '$lookup':{
+                    'from':'person_list',
+                    'localField':'person_id',
+                    'foreignField': '_id',
+                    'as':'person_inf'
+                }
+            },
+            {
+                '$unwind':{
+                    'path':'$person_inf',
+                    'preserveNullAndEmptyArrays':True
+                }
+            },
+            {
+                '$project': {
+                    "_id": 1,
+                    "user_id":1,
+                    "person_id":1,
+                    "cst_header": 1,
+                    "create_date": 1,
+                    "file_create_date":1,
+                    "person_name": "$person_inf.fullname",
+                    "person_mail": "$person_inf.mail",
+                    "person_frm_id":"$person_inf.frm_id",
+                    }
+            },
+            {
+                '$lookup':{
+                    'from':'frm_list',
+                    'localField':'person_frm_id',
+                    'foreignField': '_id',
+                    'as':'frm_inf'
+                }
+            },
+            {
+                '$unwind':{
+                    'path':'$frm_inf',
+                    'preserveNullAndEmptyArrays':True
+                }
+            },
+            {
+                '$project': {
+                    "_id": 1,
+                    "user_id":1,
+                    "person_id":1,
+                    "cst_header": 1,
+                    "create_date": {"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
+                    "file_create_date":{"$dateToString":{"format":"%Y-%m-%d","date":"$file_create_date"}},
+                    "person_name": 1,
+                    "person_mail": 1,
+                    "person_frm_id":1,
+                    "frm_name":"$frm_inf.name"
+                    }
+            },
+            {'$match':{"user_id":int(self.user_id)}}]
+        for db_item in self.conversations.aggregate(sql):
+            row = tablo.rowCount()
+            tablo.insertRow(row)
+            item = QTableWidgetItem(db_item["person_name"])
+            item.setTextAlignment(Qt.AlignCenter) 
+            tablo.setVerticalHeaderItem(row,item)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["person_mail"],row,0,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["frm_name"],row,1,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["cst_header"],row,2,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["create_date"],row,3,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["file_create_date"],row,4,tablo)
+            update_btn = self.common_items(QPushButton,"update","Güncelle",75,29)
+            update_btn.setProperty("_id",db_item["_id"])
+            update_btn.clicked.connect(self.Meet_Details)
+            tablo.setCellWidget(row,5,update_btn)
+        tablo.resizeColumnsToContents()
+        header=None
+    
+    def upcoming_meets(self):
+        if self.content_child_frame is not None:
+            for child in self.content_child_frame.findChildren(QWidget):
+                child.deleteLater()
+        if self.content_child_frame.layout():
+            QWidget().setLayout(self.content_child_frame.layout())
+
+        VFuncLayout = QVBoxLayout()
+        dikey_scroll_area=QScrollArea()
+        dikey_scroll_area.setStyleSheet(f"""QScrollBar:vertical {{
+                                    width: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:vertical {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+                                QScrollBar:horizontal {{
+                                    height: 0;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}
+                                QScrollArea{{border:0;}}""")
+        dikey_scroll_area.setFixedSize(self.content_child_frame.width()-12,self.content_child_frame.height()-20)
+        dikey_scroll_area.setWidgetResizable(True)
+        box_area = QWidget()
+        box_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        box_area.setStyleSheet("border:0;")
+        box_area_layout = QVBoxLayout(box_area)
+        box_area_layout.setContentsMargins(0,0,0,0)
+        yesterday_date = datetime.today() - timedelta(days=1)  # 1 gün geriye git
+        yesterday_date = datetime(yesterday_date.year, yesterday_date.month, yesterday_date.day)
+        sql = [
+            {
+                '$lookup':{
+                    'from':'person_list',
+                    'localField':'person_id',
+                    'foreignField': '_id',
+                    'as':'person_inf'
+                }
+            },
+            {
+                '$unwind':{
+                    'path':'$person_inf',
+                    'preserveNullAndEmptyArrays':True
+                }
+            },
+            {
+                '$project': {
+                    "_id": 1,
+                    "user_id":1,
+                    "person_id":1,
+                    "cst_header": 1,
+                    "create_date": 1,
+                    "file_create_date":1,
+                    "person_name": "$person_inf.fullname",
+                    "person_mail": "$person_inf.mail",
+                    "person_frm_id":"$person_inf.frm_id",
+                    }
+            },
+            {
+                '$lookup':{
+                    'from':'frm_list',
+                    'localField':'person_frm_id',
+                    'foreignField': '_id',
+                    'as':'frm_inf'
+                }
+            },
+            {
+                '$unwind':{
+                    'path':'$frm_inf',
+                    'preserveNullAndEmptyArrays':True
+                }
+            },
+            {
+                '$project': {
+                    "_id": 1,
+                    "user_id":1,
+                    "cst_header": 1,
+                    "create_date": {"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
+                    "person_name": 1,
+                    "frm_name":"$frm_inf.name"
+                    }
+            },
+            {
+                '$match':{
+                    "user_id":int(self.user_id),
+                    'create_date':{'$gt': yesterday_date.strftime("%Y-%m-%d")}
+                    }
+            },
+            {
+                '$sort': {
+                    'create_date': 1 
+                }
+            }]
+        for i in self.conversations.aggregate(sql):
+            meet_item = Upcome_Meets_Item(i, parent=self)  
+            box_area_layout.addWidget(meet_item)
+        for i in range(15):
+            meet_item = Upcome_Meets_Item({'_id': 8, 'user_id': 1, 'cst_header': 'Sevinç', 'person_name': 'Bora Yılmaz 2', 'create_date': '2025-12-09', 'frm_name': 'Okulsepeti'}, parent=self)  
+            box_area_layout.addWidget(meet_item)
+        dikey_scroll_area.setWidget(box_area)
+        VFuncLayout.addWidget(dikey_scroll_area)
+        VFuncLayout.addSpacing(20)
+        self.content_child_frame.setLayout(VFuncLayout)
+# ----------------------------------------------------------------------------  MEET ---------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------- Raporlar ---------------------------------------------------------------------------------------------
     def person_based_report_panel(self):
         if self.content_child_frame is not None:
@@ -2127,56 +2406,28 @@ class SuperAdminMenu(QMainWindow):
         frm_list.currentIndexChanged.connect(self.frm_prsn_list)
 
     def frm_prsn_list(self,index):
-        left_tablo = self.content_child_frame.findChildren(QTableWidget,"Left_Person_List")
-        if left_tablo:
-            left_tablo= left_tablo[0]
-            left_tablo.deleteLater()
-        right_tablo = self.content_child_frame.findChildren(QTableWidget,"Right_Person_List")
-        if right_tablo:
-            right_tablo= right_tablo[0]
-            right_tablo.deleteLater()
+        tablo = self.content_child_frame.findChildren(QTableWidget,"Person_List")
+        if tablo:
+            tablo= tablo[0]
+            tablo.deleteLater()
 
         frame_x = self.contentpanel.width()
         frame_y = self.contentpanel.height()
         header = ['Tam Adı','Mail','Firma','Çalışma Alanı','']
-        left_tablo =self.Create_Table_Set_Items(QTableWidget,[""],150,self.contentpanel.height()-100,self.content_child_frame)
-        left_tablo.setObjectName("Left_Person_List")
-        left_tablo.setStyleSheet(f"""QTableWidget{{
-                                border-radius:0;
-                                color:{self.FONT_COLOR};
-                                background-color: {self.PANEL_COLOR};
-                                border:0;
-                                }}QScrollBar:horizontal {{
-                                    height: 0px;                 /* Kaydırma çubuğunun genişliği */
-                                    margin: 0px 0px 0px 0px; 
-                                    border: 0;
-                                    background-color:white;
-                                }}QScrollBar:vertical {{
-                                    width: 0px;                 /* Kaydırma çubuğunun genişliği */
-                                    margin: 0px 0px 0px 0px; 
-                                    border: 0;
-                                    background-color:white;
-                                }}""")
-        right_tablo = self.Create_Table_Set_Items(QTableWidget,["","","",""],self.contentpanel.width()-150,self.contentpanel.height()-100,self.content_child_frame)
-        right_tablo.setObjectName("Right_Person_List")
-        left_tablo.setColumnWidth(0, 150)
-        right_tablo.setColumnWidth(0, 200)
-        right_tablo.setColumnWidth(1, 200)
-        right_tablo.setColumnWidth(2, 200)
-        right_tablo.setColumnWidth(3, 75)
-        left_tablo.move(1,40)
-        right_tablo.move(151,40)
-        left_tablo.verticalScrollBar().valueChanged.connect(lambda:right_tablo.verticalScrollBar().setValue(left_tablo.verticalScrollBar().value()))
-        right_tablo.verticalScrollBar().valueChanged.connect(lambda:left_tablo.verticalScrollBar().setValue(right_tablo.verticalScrollBar().value()))
+        tablo =self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-100,self.content_child_frame)
+        tablo.setObjectName("Person_List")
+        tablo.move(1,40)
         for col in range(len(header)):
             if col == 0:
-                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,left_tablo)
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
             else:
-                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,right_tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
         if index > 0:
             add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",75,29,self.GREEN,self.ON_HOVER_GREEN)
             add_btn.clicked.connect(self.frm_prsn_item_panel)
-            right_tablo.setCellWidget(0,3,add_btn)
+            tablo.setCellWidget(0,3,add_btn)
             sql = [
                 {
                     '$lookup':{
@@ -2217,17 +2468,27 @@ class SuperAdminMenu(QMainWindow):
                         }
                 }]
             for db_item in self.prsdb.aggregate(sql):
-                row = left_tablo.rowCount()
-                left_tablo.insertRow(row)
-                right_tablo.insertRow(row)
-                self.Create_Table_Set_Items(QTableWidgetItem,db_item["fullname"],row,0,left_tablo)
-                self.Create_Table_Set_Items(QTableWidgetItem,db_item["mail"],row,0,right_tablo)
-                self.Create_Table_Set_Items(QTableWidgetItem,db_item["frm_name"],row,1,right_tablo)
-                self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,2,right_tablo)
+                row = tablo.rowCount()
+                tablo.insertRow(row)
+                item = QTableWidgetItem(db_item["fullname"])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(row,item)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["mail"],row,0,tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["frm_name"],row,1,tablo)
+                self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,2,tablo)
                 update_btn = self.common_items(QPushButton,"update","Güncelle",75,29)
                 update_btn.setProperty("_id",db_item["_id"])
                 update_btn.clicked.connect(self.frm_prsn_item_panel)
-                right_tablo.setCellWidget(row,3,update_btn)
+                tablo.setCellWidget(row,3,update_btn)
+        tablo.resizeColumnsToContents()
+        min_widths = [200, 150, 150,75]
+
+        for col in range(tablo.columnCount()):
+            column_width = tablo.columnWidth(col)
+            if column_width < min_widths[col]:
+                tablo.setColumnWidth(col, min_widths[col])
+        min_widths = None
+        header=None
 
     def frm_prsn_item_panel(self):
         button = self.sender()
@@ -2443,19 +2704,20 @@ class SuperAdminMenu(QMainWindow):
         header = ['Firma Adı','Çalışma Alanı','']
         tablo = self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-100,self.content_child_frame)
         tablo.setObjectName("frm_list")
-        tablo_max_width=int((frame_x-75)/2)-3
-        tablo.setColumnWidth(0, tablo_max_width)
-        tablo.setColumnWidth(1, tablo_max_width)
-        tablo.setColumnWidth(2, 75)
         tablo.move(0,40)
 
         for col in range(len(header)):
-            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
+            if col == 0:
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
 
         if index > 0:
             add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",75,29,self.GREEN,self.ON_HOVER_GREEN)
             add_btn.clicked.connect(self.frm_item_panel)
-            tablo.setCellWidget(0,2,add_btn)
+            tablo.setCellWidget(0,1,add_btn)
             sql = [
                 {
                     '$lookup':{
@@ -2486,13 +2748,25 @@ class SuperAdminMenu(QMainWindow):
             for item in self.frmdb.aggregate(sql):
                 row = tablo.rowCount()
                 tablo.insertRow(row)
-                self.Create_Table_Set_Items(QTableWidgetItem,item["name"],row,0,tablo)
-                self.Create_Table_Set_Items(QTableWidgetItem,item["ws_name"],row,1,tablo)
+                tablo_item = QTableWidgetItem(item["name"])
+                tablo_item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(row,tablo_item)
+                self.Create_Table_Set_Items(QTableWidgetItem,item["ws_name"],row,0,tablo)
                 
                 update_btn = self.common_items(QPushButton,"update","Güncelle",75,29)
                 update_btn.setProperty("_id",item["_id"])
                 update_btn.clicked.connect(self.frm_item_panel)
-                tablo.setCellWidget(row,2,update_btn)
+                tablo.setCellWidget(row,1,update_btn)
+            tablo.resizeColumnsToContents()
+            tablo_max_width=frame_x-77-tablo.verticalHeader().width()
+            min_widths = [tablo_max_width,75]
+
+            for col in range(tablo.columnCount()):
+                column_width = tablo.columnWidth(col)
+                if column_width != min_widths[col]:
+                    tablo.setColumnWidth(col, min_widths[col])
+            min_widths = None
+            header=None
 
     def frm_item_panel(self):# Güncelleme veya ekleme butonuna basıldığında o item için panel oluşturur eğer güncelleme paneli ise silme butonu da ekler
         button = self.sender()
@@ -2775,35 +3049,45 @@ class SuperAdminMenu(QMainWindow):
         
         header = ['Tam Adı','Kullanıcı Adı','Yetki','Çalışma Alanı','']
         tablo = self.Create_Table_Set_Items(QTableWidget,header,self.contentpanel.width(),self.contentpanel.height()-100,self.content_child_frame)
-        tablo_max_width=int((self.contentpanel.width()-250)/2)-3
-        tablo.setColumnWidth(0, tablo_max_width)
-        tablo.setColumnWidth(1, 100)
-        tablo.setColumnWidth(2, 75)
-        tablo.setColumnWidth(3, tablo_max_width)
-        tablo.setColumnWidth(4, 75)
         tablo.move(0,40)
         tablo.setObjectName("user_list")
         
         for col in range(len(header)):
-            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
+            if col == 0:
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
         
         add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",74,29,self.GREEN,self.ON_HOVER_GREEN)
         add_btn.clicked.connect(self.users_item_panel)
-        tablo.setCellWidget(0,4,add_btn)
+        tablo.setCellWidget(0,3,add_btn)
 
         for db_item in self.usersdatadb.aggregate(sql):
             row = tablo.rowCount()
             tablo.insertRow(row)
-
-            self.Create_Table_Set_Items(QTableWidgetItem,db_item["real_name"],row,0,tablo)
-            self.Create_Table_Set_Items(QTableWidgetItem,db_item["username"],row,1,tablo)
-            self.Create_Table_Set_Items(QTableWidgetItem,db_item["permission"],row,2,tablo)
-            self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,3,tablo)
+            item = QTableWidgetItem(db_item["real_name"])
+            item.setTextAlignment(Qt.AlignCenter) 
+            tablo.setVerticalHeaderItem(row,item)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["username"],row,0,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["permission"],row,1,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,db_item["ws_name"],row,2,tablo)
 
             update_btn = self.common_items(QPushButton,"update","Güncelle",74,29)
             update_btn.setProperty("_id",db_item["_id"])
             update_btn.clicked.connect(self.users_item_panel)
-            tablo.setCellWidget(row,4,update_btn)
+            tablo.setCellWidget(row,3,update_btn)
+        tablo.resizeColumnsToContents()
+        tablo_max_width=self.contentpanel.width()- tablo.verticalHeader().width()-202-tablo.columnWidth(0)
+        min_widths = [120, tablo_max_width,75]
+
+        for col in range(tablo.columnCount()-1):
+            column_width = tablo.columnWidth(col+1)
+            if column_width != min_widths[col]:
+                tablo.setColumnWidth(col+1, min_widths[col])
+        min_widths = None
+        header=None
 
     def users_item_panel(self):
         button = self.sender()
@@ -3020,31 +3304,42 @@ class SuperAdminMenu(QMainWindow):
 
         header = ['isim','Bağlı Olduğu Alan','']
         tablo = self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-60,self.content_child_frame)
-        tablo_max_width=int((frame_x-75)/2)-3
-        tablo.setColumnWidth(0, tablo_max_width)
-        tablo.setColumnWidth(1, tablo_max_width)
-        tablo.setColumnWidth(2, 75)
-
+        
         for col in range(len(header)):
-            self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col,tablo)
+            if col == 0:
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
         
         add_btn = self.custom_color_common_items(QPushButton,"add","Yeni",74,29,self.GREEN,self.ON_HOVER_GREEN)
         add_btn.clicked.connect(self.workspace_item_panel)#self.del_workspace_btn_click
-        tablo.setCellWidget(0,2,add_btn)
+        tablo.setCellWidget(0,1,add_btn)
 
         for db_items in self.workspacedb.aggregate(sql):
             row = tablo.rowCount()
             tablo.insertRow(row)
-            self.Create_Table_Set_Items(QTableWidgetItem,db_items["name"],row,0,tablo)
+            item = QTableWidgetItem(db_items["name"])
+            item.setTextAlignment(Qt.AlignCenter) 
+            tablo.setVerticalHeaderItem(row,item)
 
             widget_text = db_items["parent_name"] if db_items["parent"] != 0 else "Main Workspace"
-            self.Create_Table_Set_Items(QTableWidgetItem,widget_text,row,1,tablo)
+            self.Create_Table_Set_Items(QTableWidgetItem,widget_text,row,0,tablo)
 
             update_btn = self.common_items(QPushButton,"update","Güncelle",74,29)
             update_btn.setProperty("_id",db_items["_id"])
             update_btn.clicked.connect(self.workspace_item_panel)#self.del_workspace_btn_click
-            tablo.setCellWidget(row,2,update_btn)
-
+            tablo.setCellWidget(row,1,update_btn)
+        tablo.resizeColumnsToContents()
+        tablo_max_width=frame_x - tablo.verticalHeader().width()-77
+        min_widths=[tablo_max_width,75]
+        for col in range(tablo.columnCount()):
+            column_width = tablo.columnWidth(col)
+            if column_width != min_widths[col]:
+                tablo.setColumnWidth(col, min_widths[col])
+        min_widths = None
+        header=None
         self.content_child_frame.show()
     
     def workspace_item_panel(self):# Seçilen işlem sonucu güncelleme veya ekleme paneli oluşturur eğer güncelle seçilirse silme butonu da oluşturulur
