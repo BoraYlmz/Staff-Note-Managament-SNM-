@@ -31,9 +31,9 @@ class Content_Button_Menu():
         self.btn_menu_h_layout.addItem(self.spacer)
 
         self.left_btn_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.BORDER_COLOR};}} """
-        self.left_btn_clicked_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
+        self.left_btn_clicked_sheet = f"""QPushButton {{color:white;background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0;border-top-left-radius:25px; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
         self.btn_sheet=f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.PANEL_COLOR};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.BORDER_COLOR};}} """
-        self.btn_clicked_sheet = f"""QPushButton {{color:{main_class.FONT_COLOR};background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
+        self.btn_clicked_sheet = f"""QPushButton {{color:white;background-color:{main_class.OS_RED};font-size:14px;border: 0;border-right:1px solid {main_class.BORDER_COLOR}; border-bottom:1px solid {main_class.BORDER_COLOR}; border-radius:0; font-weight:bold;}} QPushButton:hover{{background-color:{main_class.ON_HOVER_OS_RED};}} """
         self.clicked_buttons = None
         self.first_btn = None
 
@@ -189,7 +189,7 @@ class Upcome_Meets_Item(QWidget):
 
         top_layout.addWidget(Meet_Header,0,Qt.AlignLeft)
         bottom_layout.addWidget(person_name)
-        bottom_layout.addSpacing(300)
+        bottom_layout.addSpacing(800)
         bottom_layout.addWidget(frm_name,0,Qt.AlignRight)
         right_box.addWidget(meet_date,0,Qt.AlignCenter)
 
@@ -202,6 +202,331 @@ class Upcome_Meets_Item(QWidget):
     def mouseDoubleClickEvent(self, event):
         # Çift tıklama olayını burada yakalıyoruz
         self.parent_class.Meet_Details(self.meetdata["_id"])
+
+class Frm_Based_Report_Detail():
+    def __init__(self,date,tablo=QTableWidget,menu_id=None,main_class=None):
+        self.menu_id = menu_id
+        self.tablo = tablo
+        self.date = date
+        self.main_class = main_class
+        self.sqlparts=[{
+                            '$lookup':{
+                                'from':'person_list',
+                                'localField':'person_id',
+                                'foreignField': '_id',
+                                'as':'person_name'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$person_name',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
+                                "create_date":1,
+                                "person_name":"$person_name.fullname",
+                                "person_mail":"$person_name.mail",
+                                "person_frm_id":"$person_name.frm_id",
+                                "cst_header":1
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'users_data',
+                                'localField':'user_id',
+                                'foreignField': '_id',
+                                'as':'user_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$user_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":"$user_inf.real_name",
+                                "ws_id":"$user_inf.workspace_id"
+
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'workspace_list',
+                                'localField':'ws_id',
+                                'foreignField': '_id',
+                                'as':'ws_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$ws_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":1,
+                                "ws_id":1,
+                                "ws_name":"$ws_inf.name",
+                                "ws_parent":"$ws_inf.parent"
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'frm_list',
+                                'localField':'person_frm_id',
+                                'foreignField': '_id',
+                                'as':'frm_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$frm_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":1,
+                                "ws_id":1,
+                                "ws_name":1,
+                                "ws_parent":1,
+                                "frm_name":"$frm_inf.name"
+                            }
+                        }]
+    def click_table(self,row,col):
+        sql = self.sqlparts.copy()
+        sql.append({"$match":
+                    {
+                        "$expr": {
+                            "$eq": [{ "$month": "$create_date" }, col+1]
+                        }
+                    }})
+        if self.menu_id is None or self.menu_id == 1:
+            sql.insert(0,{"$match":{"user_id":self.main_class.user_id}})
+        if self.main_class.user_perm == "Müdür":
+            sql.append({"$match":{"$or":[{"ws_id":self.main_class.user_workspace_id},{"ws_parent":self.main_class.user_workspace_id}]}})
+        if self.date > 1 :
+                        sql.append({
+                            "$match":{
+                                "$expr": {
+                                 "$eq": [{ "$year": "$create_date" }, self.date]
+                                 }
+                                }
+                        })
+        visit_count = False
+        if row == 0:
+            for i in range(self.tablo.rowCount()):
+                item = self.tablo.item(i,col)
+                if item != None:
+                    visit_count = True
+                    break
+        else: 
+            item = self.tablo.item(row,col)
+            if item != None:
+                visit_count = True
+            if self.menu_id == 1:
+                person_id = self.tablo.verticalHeaderItem(row)
+                person_id = person_id.data(Qt.UserRole)
+                sql.append({ "$match":{"person_id":int(person_id)}}) 
+            elif self.menu_id == 3:
+                user_id = self.tablo.verticalHeaderItem(row)
+                user_id = user_id.data(Qt.UserRole)
+                sql.insert(0,{"$match":{"user_id":user_id}})
+            else:
+                frm_id = self.tablo.verticalHeaderItem(row)
+                frm_id = frm_id.data(Qt.UserRole)
+                sql.append({ "$match":{"person_frm_id":int(frm_id)}})                      
+
+        if visit_count: # Eğer o ay içerisinde herhangi bir ziyaret varsa panelde detayları gösterecek
+            self.main_class.ReportDetailsTable(sql,self.menu_id)
+    def click_vheader(self,row):
+        visit_count = False
+        for i in range(self.tablo.columnCount()):
+            item = self.tablo.item(row,i)
+            if item != None:
+                visit_count = True
+                break
+        if visit_count: # Eğer o ay içerisinde herhangi bir ziyaret varsa panelde detayları gösterecek
+            sql = self.sqlparts.copy()
+            if self.menu_id == 1:
+                person_id = self.tablo.verticalHeaderItem(row)
+                person_id = person_id.data(Qt.UserRole)
+                sql.append({ "$match":{"person_id":int(person_id)}}) 
+            elif self.menu_id == 3:
+                user_id = self.tablo.verticalHeaderItem(row)
+                user_id = user_id.data(Qt.UserRole)
+                sql.insert(0,{"$match":{"user_id":user_id}})
+            else:
+                frm_id = self.tablo.verticalHeaderItem(row)
+                frm_id = frm_id.data(Qt.UserRole)
+                sql.append({ "$match":{"person_frm_id":int(frm_id)}})
+            if self.menu_id is None or self.menu_id== 1:
+                sql.insert(0,{"$match":{"user_id":self.main_class.user_id}})
+            if self.main_class.user_perm == "Müdür":
+                sql.append({"$match":{"$or":[{"ws_id":self.main_class.user_workspace_id},{"ws_parent":self.main_class.user_workspace_id}]}})
+            if self.date > 1 :
+                            sql.append({
+                                "$match":{
+                                    "$expr": {
+                                    "$eq": [{ "$year": "$create_date" }, self.date]
+                                    }
+                                    }
+                            })
+            self.main_class.ReportDetailsTable(sql,self.menu_id)
+
+class Person_Based_Report_Detail():
+    def __init__(self,date,tablo=QTableWidget,main_class=None):
+        self.tablo = tablo
+        self.date = date
+        self.main_class = main_class
+        self.sqlparts=[{
+                        '$lookup':{
+                                'from':'person_list',
+                                'localField':'person_id',
+                                'foreignField': '_id',
+                                'as':'person_name'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$person_name',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
+                                "create_date":1,
+                                "person_name":"$person_name.fullname",
+                                "person_mail":"$person_name.mail",
+                                "person_frm_id":"$person_name.frm_id",
+                                "cst_header":1
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'users_data',
+                                'localField':'user_id',
+                                'foreignField': '_id',
+                                'as':'user_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$user_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":"$user_inf.real_name",
+                                "ws_id":"$user_inf.workspace_id"
+
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'workspace_list',
+                                'localField':'ws_id',
+                                'foreignField': '_id',
+                                'as':'ws_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$ws_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":1,
+                                "ws_id":1,
+                                "ws_name":"$ws_inf.name",
+                                "ws_parent":"$ws_inf.parent"
+                            }
+                        },
+                        {
+                            '$lookup':{
+                                'from':'frm_list',
+                                'localField':'person_frm_id',
+                                'foreignField': '_id',
+                                'as':'frm_inf'
+                            }
+                        },
+                        {
+                            '$unwind':{
+                                'path':'$frm_inf',
+                                'preserveNullAndEmptyArrays':True
+                            }
+                        },
+                        {
+                            "$project": {
+                                "person_id": 1, 
+                                "user_id":1,
+                                "year-month":1,
+                                "create_date":1,
+                                "person_name":1,
+                                "person_mail":1,
+                                "person_frm_id":1,
+                                "cst_header":1,
+                                "real_name":1,
+                                "ws_id":1,
+                                "ws_name":1,
+                                "ws_parent":1,
+                                "frm_name":"$frm_inf.name"
+                            }
+                        }]
 
 class SuperAdminMenu(QMainWindow):
     def __init__(self,THEME_ID,user,user_id,ws_id,perm):
@@ -258,7 +583,7 @@ class SuperAdminMenu(QMainWindow):
             self.normal_button = f"""QPushButton{{
                                     border: 1px solid {self.BORDER_COLOR};
                                     border-radius:5px;
-                                    color:{self.FONT_COLOR};
+                                    color:white;
                                     font-weight: bold;
                                     font-family: Arial;
                                     text-align:center;
@@ -287,7 +612,7 @@ class SuperAdminMenu(QMainWindow):
                                     border: 1px solid {self.BORDER_COLOR};
                                     border-left:0;
                                     border:0;
-                                    color:{self.FONT_COLOR};
+                                    color:white;
                                     font-size:18px;
                                     text-align:left;}}
                                     QPushButton:hover{{
@@ -338,33 +663,40 @@ class SuperAdminMenu(QMainWindow):
 
                                                     """
             if self.user_perm in ("Admin","Müdür"):
-                new_desing = QPushButton(" Admin Menü")
-                new_desing.setStyleSheet(self.btnstyle)
-                new_desing.setFixedSize(MenuPanel.width()-5,50)
-                new_desing.setObjectName("8")
-                new_desing.clicked.connect(self.left_menu_click) 
+                admin_menu = QPushButton(" Admin Menü")
+                admin_menu.setStyleSheet(self.btnstyle)
+                admin_menu.setFixedSize(MenuPanel.width()-5,50)
+                admin_menu.setObjectName("1")
+                admin_menu.clicked.connect(self.left_menu_click) 
+
+                preports = QPushButton(" Personel Raporları")
+                preports.setStyleSheet(self.btnstyle)
+                preports.setFixedSize(MenuPanel.width()-5,50)
+                preports.setObjectName("2")
+                preports.clicked.connect(self.left_menu_click) 
 
             reports = QPushButton(" Kişisel Raporlar")
             reports.setStyleSheet(self.btnstyle)
             reports.setFixedSize(MenuPanel.width()-5,50)
-            reports.setObjectName("5")
+            reports.setObjectName("3")
             reports.clicked.connect(self.left_menu_click) 
 
             todos = QPushButton(" Toplantılarım")
             todos.setStyleSheet(self.btnstyle)
             todos.setFixedSize(MenuPanel.width()-5,50)
-            todos.setObjectName("1")
+            todos.setObjectName("4")
             todos.clicked.connect(self.left_menu_click) 
 
             ayarlar = QPushButton(" Ayarlar")
             ayarlar.setStyleSheet(self.btnstyle)
             ayarlar.setFixedSize(MenuPanel.width()-5,50)
-            ayarlar.setObjectName("7")
+            ayarlar.setObjectName("9")
             # self.ayarlar.clicked.connect(self.ayarlar_click) 
 
             
             if self.user_perm in("Admin","Müdür") :
-                self.Menu_layout.addWidget(new_desing)
+                self.Menu_layout.addWidget(admin_menu)
+                self.Menu_layout.addWidget(preports)
             self.Menu_layout.addWidget(todos)
             self.Menu_layout.addWidget(reports)
             self.Menu_layout.addWidget(ayarlar,0,Qt.AlignBottom)
@@ -417,24 +749,29 @@ class SuperAdminMenu(QMainWindow):
         self.content_child_frame.setStyleSheet(f"border-radius:0; border-bottom-left-radius:25px;")
         self.content_child_frame.move(0,39)
         self.content_child_frame.show()
-        if buton_id == 1:#Kişisel Raporlar
-            btn_menu = Content_Button_Menu(self.contentpanel,self)
-            btn_menu.new_btn("Liste",self.my_meets)
-            btn_menu.new_btn("Yaklaşan",self.upcoming_meets)
-            btn_menu.new_btn("Yapılacak",self.self_todos)
+        
             
-        elif buton_id == 5:#Kişisel Raporlar
-            btn_menu = Content_Button_Menu(self.contentpanel,self)
-            btn_menu.new_btn("Firma Bazlı",self.frm_based_report_panel)
-            btn_menu.new_btn("Kiş Bazlı",self.person_based_report_panel)
-        elif buton_id == 8:#Kişisel Raporlar
+        
+        if buton_id == 1:#Admin Paneli
             btn_menu = Content_Button_Menu(self.contentpanel,self)
             btn_menu.new_btn("Workspaces",self.workspace_list_panel)
             btn_menu.new_btn("Yetkiler",self.list_users_panel)
             btn_menu.new_btn("Firmalar",self.frm_list_panel)
             btn_menu.new_btn("Kişiler",self.frm_prsn_list_panel)
             btn_menu.new_btn("Tara",self.scan_locale_user_data)
-
+        elif buton_id == 2:#Personel Raporları
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
+            btn_menu.new_btn("Firma Bazlı",lambda:self.frm_based_report_panel(2))
+            btn_menu.new_btn("Personel Bazlı",lambda:self.person_based_report_panel(2))
+        elif buton_id == 3:#Kişisel Raporlar
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
+            btn_menu.new_btn("Firma Bazlı",self.frm_based_report_panel)
+            btn_menu.new_btn("Kiş Bazlı",self.person_based_report_panel)
+        elif buton_id == 4:#Toplantılarım
+            btn_menu = Content_Button_Menu(self.contentpanel,self)
+            btn_menu.new_btn("Liste",self.my_meets)
+            btn_menu.new_btn("Yaklaşan",self.upcoming_meets)
+            btn_menu.new_btn("Yapılacak",self.self_todos)
         Menu_layout = QVBoxLayout(self.contentpanel)
         Menu_layout.setContentsMargins(0,0,0,0)
         self.layout.addWidget(self.contentpanel,0,QtCore.Qt.AlignRight)
@@ -721,6 +1058,7 @@ class SuperAdminMenu(QMainWindow):
         yatay_layout.addWidget(chech_box)
         yatay_layout.addWidget(todo_textbox,0,Qt.AlignLeft)
         yatay_layout.addWidget(date_picker,0,Qt.AlignRight)
+
         if widget_name != "new_to_do":
             meet = self.findChildren(QFrame,"editmeet")
             delete_btn =QPushButton("X")
@@ -731,9 +1069,12 @@ class SuperAdminMenu(QMainWindow):
                 meet = meet[0]
                 meet = meet.property("meet_id")
                 delete_btn.clicked.connect(self.delete_todo)     
+                user_control = self.conversations.find_one({"_id":meet})
+                if self.user_id == user_control["user_id"]:
+                    yatay_layout.addWidget(delete_btn)
             else:
                 delete_btn.clicked.connect(lambda:delete_btn.parent().deleteLater())
-            yatay_layout.addWidget(delete_btn)
+                yatay_layout.addWidget(delete_btn)
         todo_area.setLayout(yatay_layout)
         return(todo_area)
 
@@ -798,7 +1139,7 @@ class SuperAdminMenu(QMainWindow):
             btn.setFixedSize(widget_width,widget_height)
             return btn
     
-    def Create_Table_Set_Items(self,widget:QWidget,widget_text,widget_width:int,widget_height:int,parent):
+    def Create_Table_Set_Items(self,widget:QWidget,widget_text,widget_width:int,widget_height:int,parent,set_bg=None):
         if widget == QTableWidget:
             tablo = CustomTableWidget(1,len(widget_text)-1,parent)
             tablo_style = f"""QTableWidget{{
@@ -862,12 +1203,13 @@ class SuperAdminMenu(QMainWindow):
             # tablo.verticalHeader().setVisible(False)
             tablo.setFixedSize(widget_width,widget_height)
             tablo.move(0,0)
-            tablo.show()
+            if parent is not None:
+                tablo.show()
             return tablo
         elif widget == QTableWidgetItem:
             item = QTableWidgetItem(widget_text)
             item.setTextAlignment(Qt.AlignCenter) 
-            if widget_width == 0:
+            if widget_width == 0 or set_bg:
                 item.setBackground(QColor(self.BORDER_COLOR))
             item.setFlags(QtCore.Qt.ItemIsEnabled) 
             parent.setItem(widget_width,widget_height,item) 
@@ -1144,10 +1486,10 @@ class SuperAdminMenu(QMainWindow):
                         
                 else:
                     self.bildirim("Lütfen Bir Kişi seçiniz")
-        elif button_name == "Edit_Text":
+        elif button_name == "Edit_Text":     
             textbox = self.findChildren(QTextEdit,"MeetTextArea")[0]
             meet_id = self.findChildren(QFrame,"editmeet")[0]
-            meet_id = meet_id.property("meet_id")  
+            meet_id = meet_id.property("meet_id") 
             textbox = textbox.toHtml()
             self.conversations.update_one({"_id":meet_id},{"$set":{"file_data":textbox}})
             meet = self.findChildren(QWidget,"add_to_do")
@@ -1460,16 +1802,13 @@ class SuperAdminMenu(QMainWindow):
         for i in self.conversations.aggregate(sql):
             meet_item = Upcome_Meets_Item(i, parent=self)  
             box_area_layout.addWidget(meet_item)
-        for i in range(15):
-            meet_item = Upcome_Meets_Item({'_id': 8, 'user_id': 1, 'cst_header': 'Sevinç', 'person_name': 'Bora Yılmaz 2', 'create_date': '2025-12-09', 'frm_name': 'Okulsepeti'}, parent=self)  
-            box_area_layout.addWidget(meet_item)
         dikey_scroll_area.setWidget(box_area)
         VFuncLayout.addWidget(dikey_scroll_area)
         VFuncLayout.addSpacing(20)
         self.content_child_frame.setLayout(VFuncLayout)
 # ----------------------------------------------------------------------------  MEET ---------------------------------------------------------------------------------------------
 # ---------------------------------------------------------------------------- Raporlar ---------------------------------------------------------------------------------------------
-    def person_based_report_panel(self):
+    def person_based_report_panel(self,menu_id = None):
         if self.content_child_frame is not None:
             for child in self.content_child_frame.findChildren(QWidget):
                 child.deleteLater()
@@ -1478,13 +1817,22 @@ class SuperAdminMenu(QMainWindow):
 
         dikey_layout = QVBoxLayout(self.content_child_frame)
         yatay_layout = QHBoxLayout()
+        yatay_layout.setAlignment(Qt.AlignTop)
         frame_x = (self.contentpanel.width()-20)/2
 
-        frm_list = self.common_items(QComboBox,"frm_list","Select Any Firm",frame_x,25)
-        self.set_combobox_items(frm_list,"Self_Firm",frm_list)
+        if menu_id is None:
+            frm_list = self.common_items(QComboBox,"frm_list","Select Any Firm",frame_x,25)
+            self.set_combobox_items(frm_list,"Self_Firm",frm_list)
+            frm_list.currentIndexChanged.connect(self.person_based_report)
+            yatay_layout.addWidget(frm_list)
 
-        yatay_layout.setAlignment(Qt.AlignTop)
-        yatay_layout.addWidget(frm_list)
+        else:
+            main_ws  = self.common_items(QComboBox,"ws_list","Select Any Staff",frame_x,25)
+            self.set_combobox_items(main_ws,"Ws_Parent_Set",main_ws)
+            main_ws.removeItem(1)
+            main_ws.currentIndexChanged.connect(self.staff_based_report)
+            yatay_layout.addWidget(main_ws)
+
 
         date_db = self.common_items(QComboBox,"date","Select Any Date",frame_x,25)
         date_db.clear()
@@ -1515,7 +1863,10 @@ class SuperAdminMenu(QMainWindow):
                 date_db.addItem("Tüm Zamanlar",userData=1)
                 for i in range(min_year,max_year+1):
                     date_db.addItem(str(i),userData=int(i)) 
+                if menu_id is None:
                     date_db.currentIndexChanged.connect(self.person_based_report)
+                else:
+                    date_db.currentIndexChanged.connect(self.staff_based_report)
         
         date_db.setFixedWidth(frame_x)
         yatay_layout.addWidget(date_db)
@@ -1523,420 +1874,276 @@ class SuperAdminMenu(QMainWindow):
         dikey_layout.addSpacerItem(QSpacerItem(self.contentpanel.width(), self.contentpanel.height()-100, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.content_child_frame.setLayout(dikey_layout)
     
-    def person_based_report(self,index):
+    def person_based_report(self):
         tablo = self.content_child_frame.findChildren(QTableWidget,"person_based")
-        frame_x = self.contentpanel.width()
-        frame_y = self.contentpanel.height()
         if tablo:
             tablo= tablo[0]
             tablo.deleteLater()
         
         frm_id = self.content_child_frame.findChildren(QComboBox,"frm_list")[0]
         frm_id = frm_id.itemData(frm_id.currentIndex())
-
         date = self.content_child_frame.findChildren(QComboBox,"date")[0]
         date = date.itemData(date.currentIndex())
-        #,"year-month":{"$dateToString":{"format":"%Y-%m","date":"$create_date"}}
-        if isinstance(frm_id,int):
-            if frm_id > 0 and date > 0: 
-                sql = [
-                {
-                    '$lookup':{
-                        'from':'person_list',
-                        'localField':'person_id',
-                        'foreignField': '_id',
-                        'as':'person_name'
-                    }
-                },
-                {
-                    '$unwind':{
-                        'path':'$person_name',
-                        'preserveNullAndEmptyArrays':True
-                    }
-                },
-                {
-                    "$match":{
-                        "user_id":int(self.user_id)
+        if frm_id > 0 and date > 0: 
+            sql = [
+                    {
+                        '$lookup':{
+                            'from':'person_list',
+                            'localField':'person_id',
+                            'foreignField': '_id',
+                            'as':'person_name'
                         }
-                },
-                {
-                    "$project": {
-                        "person_id": 1, 
-                        "year":{"$year":"$create_date"},
-                        "month":{"$month":"$create_date"},
-                        "person_name":"$person_name.fullname",
-                        "person_mail":"$person_name.mail",
-                        "person_frm_id":"$person_name.frm_id"
-                    }
-                },
-                {
-                    "$match":{
-                        "person_frm_id":int(frm_id)
+                    },
+                    {
+                        '$unwind':{
+                            'path':'$person_name',
+                            'preserveNullAndEmptyArrays':True
                         }
-                },
-                {
-                    "$group":{
-                        "_id":{"person_id":"$person_id","year":"$year","month":"$month","person_name":"$person_name","person_mail":"$person_mail"},
-                        "visit_count":{"$sum":1}
-                    }
-                },
-                {
-                    "$project":{
-                        "person_id":"$_id.person_id",
-                        "person_name":"$_id.person_name",
-                        "person_mail":"$_id.person_mail",
-                        "year":"$_id.year",
-                        "month":"$_id.month",
-                        "visit_count":1,
-                        "_id":0
-                    }
-                },{"$sort":{"person_id":1}}]
-                if date > 1:
-                    sql.append({"$match":{"year":int(date)}})
-                sorgu = self.conversations.aggregate(sql).to_list(None)
-                person_ids = []
-                for i in sorgu:
-                    if i['person_id'] not in person_ids:
-                        person_ids.append(int(i["person_id"]))
-                row= len(person_ids)
-                header = ['Tam Adı','Mail',"Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
-                tablo = CustomTableWidget(row+1,len(header),self.content_child_frame)
-                tablo.setObjectName("person_based")
-                tablo.setStyleSheet(f"""QTableWidget{{
-                                    border-radius:0;
-                                    color:{self.FONT_COLOR};
-                                    background-color: {self.PANEL_COLOR};
-                                    }}
-                                    QScrollBar:horizontal {{
-                                        height: 5px;                 /* Kaydırma çubuğunun genişliği */
-                                        margin: 0px 0px 0px 0px; 
-                                        border: 1;
-                                        background-color:white;
-                                    }}
-
-                                    QScrollBar::handle:horizontal {{
-                                        background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
-                                        min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
-                                        border: 0 ;
-                                    }}
-                                    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-                                        background: none;            /* Ok işaretlerinin görünmemesi için */
-                                    }}
-
-                                    QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {{
-                                        background: none;            /* Ok işaretlerinin görünmemesi için */
-                                    }}""")
-                tablo.horizontalHeader().setVisible(False)
-                tablo.verticalHeader().setVisible(False)
-                tablo_max_width=int((frame_x-150)/3)-1
-                tablo.setColumnWidth(0, 150)
-                tablo.setColumnWidth(1, 200)
-                for i in range(12):
-                    tablo.setColumnWidth(i+2, 75)
-                tablo.setFixedSize(frame_x,frame_y-110)
-                tablo.move(0,45)
-                tablo.setEditTriggers(QTableWidget.NoEditTriggers)
-    
-                for col in range(len(header)):
+                    },
+                    {
+                        "$match":{
+                            "user_id":int(self.user_id)
+                            }
+                    },
+                    {
+                        "$project": {
+                            "person_id": 1, 
+                            "year":{"$year":"$create_date"},
+                            "month":{"$month":"$create_date"},
+                            "person_name":"$person_name.fullname",
+                            "person_mail":"$person_name.mail",
+                            "person_frm_id":"$person_name.frm_id"
+                        }
+                    },
+                    {
+                        "$match":{
+                            "person_frm_id":int(frm_id)
+                            }
+                    },
+                    {
+                        "$group":{
+                            "_id":{"person_id":"$person_id","year":"$year","month":"$month","person_name":"$person_name","person_mail":"$person_mail"},
+                            "visit_count":{"$sum":1}
+                        }
+                    },
+                    {
+                        "$project":{
+                            "person_id":"$_id.person_id",
+                            "person_name":"$_id.person_name",
+                            "person_mail":"$_id.person_mail",
+                            "year":"$_id.year",
+                            "month":"$_id.month",
+                            "visit_count":1,
+                            "_id":0
+                        }
+                    },{"$sort":{"person_id":1}}]
+            if date > 1:
+                    sql.append({"$match":{"year":int(date)}})   
+            header = ['Tam Adı',"Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
+            tablo = self.Create_Table_Set_Items(QTableWidget,header,self.contentpanel.width(),self.contentpanel.height()-110,self.content_child_frame)
+            tablo.setObjectName("person_based")
+            for i in range(tablo.columnCount()):
+                tablo.setColumnWidth(i, 75)
+            tablo.setEditTriggers(QTableWidget.NoEditTriggers)
+            tablo.move(0,45)
+            for col in range(len(header)):
+                if col == 0:
                     item = QTableWidgetItem(header[col])
                     item.setTextAlignment(Qt.AlignCenter) 
-                    item.setBackground(QColor(self.BORDER_COLOR))
-                    tablo.setItem(0,col,item) 
-                    tablo.show()
-                row_num=1
-                sql_header = ['person_name','person_mail','month','visit_count']
-                row_id = 0
-                for item in sorgu:
-                    if row_id == item["person_id"]:
-                        row_num -= 1
-                        table_item_kontrol= tablo.item(row_num,int(item[sql_header[2]])+1)
-                        if table_item_kontrol != None:
-                            visit_num = int(table_item_kontrol.text())+int(item[sql_header[3]])
-                            table_item = QTableWidgetItem(str(visit_num))
-                        else:
-                            table_item = QTableWidgetItem(str(item[sql_header[3]]))
-                        table_item.setTextAlignment(Qt.AlignCenter) 
-                        table_item.setBackground(QColor(self.BORDER_COLOR))
-                        tablo.setItem(row_num,int(item[sql_header[2]])+1,table_item)
-                    else:
-                        for i in range(len(sql_header)):
-                            if i != 2:
-                                table_item = QTableWidgetItem(str(item[sql_header[i]]))
-                                table_item.setTextAlignment(Qt.AlignCenter) 
-                                table_item.setBackground(QColor(self.BORDER_COLOR))
-                                tablo.setItem(row_num,i,table_item)
-                                if i == 0:
-                                    tablo.item(row_num,i).setData(Qt.UserRole,item["person_id"])
-                            else:
-                                table_item = QTableWidgetItem(str(item[sql_header[i+1]]))
-                                table_item.setTextAlignment(Qt.AlignCenter) 
-                                table_item.setBackground(QColor(self.BORDER_COLOR))
-                                tablo.setItem(row_num,int(item[sql_header[i]])+1,table_item)
-                                break
-                    row_num += 1
-                    row_id = item["person_id"]
-                tablo.cellDoubleClicked.connect(self.person_based_report_detail_click)
-    
-    def person_based_report_detail_click(self,row,col):
-        tablo = self.content_child_frame.findChildren(QTableWidget,"person_based")[0]
-        max_row = tablo.rowCount()
+                    tablo.setVerticalHeaderItem(0,item)
+                else:
+                    self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
+            search_id = None
+            for db_item in self.conversations.aggregate(sql):
+                if search_id != db_item["person_id"]:
+                    row = tablo.rowCount()
+                    tablo.insertRow(row)
+                    item = QTableWidgetItem(db_item["person_name"])
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setData(Qt.UserRole, db_item["person_id"])
+                    tablo.setVerticalHeaderItem(row,item)
+                    search_id = db_item["person_id"] 
+                past_item = tablo.item(row,db_item['month']-1)
+                if past_item is not None:
+                    visit_num = int(past_item.text()) + db_item['visit_count']
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(visit_num),row,db_item["month"]-1,tablo,True)
+                else:
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(db_item["visit_count"]),row,db_item["month"]-1,tablo,True)
+            rp = Frm_Based_Report_Detail(date,tablo,1,self)
+            tablo.verticalHeader().sectionDoubleClicked.connect(rp.click_vheader)
+            tablo.cellDoubleClicked.connect(rp.click_table)
+
+    def staff_based_report(self):
+        tablo = self.content_child_frame.findChildren(QTableWidget,"staff_based")
+        if tablo:
+            tablo= tablo[0]
+            tablo.deleteLater()
+        ws_id = self.content_child_frame.findChildren(QComboBox,"ws_list")[0]
+        ws_id = ws_id.itemData(ws_id.currentIndex())
         date = self.content_child_frame.findChildren(QComboBox,"date")[0]
         date = date.itemData(date.currentIndex())
-        if row == 0: # Başlık kısmına tıklandı ise
-            if col > 1: #başlık kısmında aylardan birine tıklandı ise
-                visit_count = False
-                for i in range(1,max_row):
-                    item = tablo.item(i,col)
-                    if item != None:
-                        visit_count = True
-                        break
-                if visit_count: # Eğer o ay içerisinde herhangi bir ziyaret varsa panelde detayları gösterecek
-                    frm_id = self.content_child_frame.findChildren(QComboBox,"frm_list")[0]
-                    frm_id = frm_id.itemData(frm_id.currentIndex())
-                    sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "person_frm_id":int(frm_id),
-                                "$expr": {
-                                 "$eq": [{ "$month": "$create_date" }, col-1]
-                                 }
-                                }
+        if ws_id > 0 and date > 0: 
+            sql =[
+                    {
+                        '$lookup':{
+                            'from':'users_data',
+                            'localField':'user_id',
+                            'foreignField': '_id',
+                            'as':'user_inf'
                         }
-                        ]
-                    if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                    data = self.conversations.aggregate(sql)
-                    self.ReportDetailsTable(data)
-        else:# kişi tablosuna tıklandıysa
-            if col == 0:#Kişiye Tıklandıysa
-                item = tablo.item(row,col)
-                item = item.data(Qt.UserRole)
-                sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "person_id":int(item)
-                                }
+                    },
+                    {
+                        '$unwind':{
+                            'path':'$user_inf',
+                            'preserveNullAndEmptyArrays':True
                         }
-                        ]
-                if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                data = self.conversations.aggregate(sql)
-                self.ReportDetailsTable(data)#Kişiye ait visitleri detaylarını gösteren pencereyi açacak
-            elif col > 1:# kişinin belli bir ayına tıklandıysa
-                item =  tablo.item(row,col)
-                if item != None:
-                    person_id = tablo.item(row,0)
-                    person_id = person_id.data(Qt.UserRole)
-                    frm_id = self.content_child_frame.findChildren(QComboBox,"frm_list")[0]
-                    frm_id = frm_id.itemData(frm_id.currentIndex())
-                    sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "person_frm_id":int(frm_id),
-                                "person_id":person_id,
-                                "$expr": {
-                                 "$eq": [{ "$month": "$create_date" }, col-1]
-                                 }
-                                }
+                    },
+                    {
+                        '$project':{
+                            'user_id':1,
+                            'user_name':'$user_inf.real_name',
+                            'user_ws_id':'$user_inf.workspace_id',
+                            "year":{"$year":"$create_date"},
+                            "month":{"$month":"$create_date"},
                         }
-                        ]
-                    if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                    data = self.conversations.aggregate(sql)
-                    self.ReportDetailsTable(data)
-                    
-    def ReportDetailsTable(self,data):
+                    },
+                    {
+                        '$lookup':{
+                            'from':'workspace_list',
+                            'localField':'user_ws_id',
+                            'foreignField': '_id',
+                            'as':'ws_inf'
+                        }
+                    },
+                    {
+                        '$unwind':{
+                            'path':'$ws_inf',
+                            'preserveNullAndEmptyArrays':True
+                        }
+                    },
+                    {
+                        '$project':{
+                            'user_id':1,
+                            'user_name':1,
+                            'user_ws_id':1,
+                            "year":1,
+                            "month":1,
+                            "user_ws_parent":"$ws_inf.parent"
+                        }
+                    },
+                    {
+                        "$match":{"$or":[
+                            {"user_ws_id":ws_id},
+                            {"user_ws_parent":ws_id}]
+                            }
+                    },
+                    {
+                        "$group":{
+                            "_id":{"user_id":"$user_id","year":"$year","month":"$month","user_name":"$user_name"},
+                            "visit_count":{"$sum":1}
+                        }
+                    },
+                    {
+                        "$project":{
+                            "user_id":"$_id.user_id",
+                            "user_name":"$_id.user_name",
+                            "year":"$_id.year",
+                            "month":"$_id.month",
+                            "visit_count":1,
+                            "_id":0
+                        }
+                    },{"$sort":{"user_id":1}}]
+            if date > 1:
+                    sql.append({"$match":{"year":int(date)}})     
+            header = ['Tam Adı',"Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
+            tablo = self.Create_Table_Set_Items(QTableWidget,header,self.contentpanel.width(),self.contentpanel.height()-110,self.content_child_frame)
+            tablo.setObjectName("staff_based")
+            for i in range(tablo.columnCount()):
+                tablo.setColumnWidth(i, 75)
+            tablo.setEditTriggers(QTableWidget.NoEditTriggers)
+            tablo.move(0,45)
+            for col in range(len(header)):
+                if col == 0:
+                    item = QTableWidgetItem(header[col])
+                    item.setTextAlignment(Qt.AlignCenter) 
+                    tablo.setVerticalHeaderItem(0,item)
+                else:
+                    self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
+            search_id = None
+            for db_item in self.conversations.aggregate(sql):
+                if search_id != db_item["user_id"]:
+                    row = tablo.rowCount()
+                    tablo.insertRow(row)
+                    item = QTableWidgetItem(db_item["user_name"])
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setData(Qt.UserRole, db_item["user_id"])
+                    tablo.setVerticalHeaderItem(row,item)
+                    search_id = db_item["user_id"] 
+                past_item = tablo.item(row,db_item['month']-1)
+                if past_item is not None:
+                    visit_num = int(past_item.text()) + db_item['visit_count']
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(visit_num),row,db_item["month"]-1,tablo,True)
+                else:
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(db_item["visit_count"]),row,db_item["month"]-1,tablo,True)
+            rp = Frm_Based_Report_Detail(date,tablo,3,self)
+            tablo.verticalHeader().sectionDoubleClicked.connect(rp.click_vheader)
+            tablo.cellDoubleClicked.connect(rp.click_table)
+    
+    def ReportDetailsTable(self,data,menu_id=None):
         MenuPanel = QFrame(self)
-        MenuPanel.setFixedSize(self.width(),763)
-        MenuPanel.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.WIN_COLOR};border-radius:10px;border-top-left-radius:0px;border-top-right-radius:0px;border-right:0;border-top:0;")
+        MenuPanel.setFixedSize(self.width(),self.height()-50)
+        MenuPanel.setStyleSheet(f"border: 1px solid {self.BORDER_COLOR};background-color:{self.WIN_COLOR};border-radius:0;border-left:0;border-bottom:0;")
+        MenuPanel_lay = QVBoxLayout()
+        MenuPanel_lay.setContentsMargins(0,0,0,0)
+        MenuPanel_lay.setSpacing(0)
+        btn_menu_lay = QHBoxLayout()
+        back_btn = self.custom_color_common_items(QPushButton,"back_btn"," < ",35,35,self.WIN_COLOR,self.OS_RED)
+        back_btn.clicked.connect(lambda:MenuPanel.deleteLater())
+        btn_menu_lay.setAlignment(Qt.AlignTop)
+        table_menu_lay = QHBoxLayout()
+        header = ['Personel Adı','Çalışma Alanı','Firma Adı','Kişi Adı','Kişi Maili','Toplantı Başlığı','Toplantı Tarihi','Detay']
+        if menu_id is None or menu_id == 1:
+            for i in range(2):
+                header.pop(0)
 
-        back_btn = QPushButton(" < ",MenuPanel)
-        back_btn.setStyleSheet(f"""QPushButton{{
-                                  border: 1px solid {self.BORDER_COLOR};
-                                  border-bottom:0;
-                                  border-top:0;
-                                  border-radius:0;
-                                  color:{self.FONT_COLOR};
-                                  font-weight: bold;
-                                  font-family: Arial;
-                                  font-size:15px;
-                                  text-align:center;
-                                  background-color:{self.WIN_COLOR};
-                                  }}
-                                  QPushButton:Hover{{background-color:{self.OS_RED};}}""")
-        back_btn.move(0,0)
-        back_btn.setFixedSize(35,35)
-        back_btn.show()
-        back_btn.clicked.connect(lambda:back_btn.parentWidget().deleteLater())
-
-        sorgu = data.to_list(None)
-        row= len(sorgu)
-        header = ['Tam Adı','Mail','Toplantı Tarihi','Toplantı Başlığı','Detay']
-        tablo = QTableWidget(row+1,len(header),MenuPanel)
-        tablo.setStyleSheet(f"""QTableWidget{{
-                            border-radius:0;
-                            color:{self.FONT_COLOR};
-                            background-color: {self.PANEL_COLOR};
-                            }}
-                            QScrollBar:horizontal {{
-                                height: 5px;                 /* Kaydırma çubuğunun genişliği */
-                                margin: 0px 0px 0px 0px; 
-                                border: 1;
-                                background-color:white;
-                            }}
-
-                            QScrollBar::handle:horizontal {{
-                                background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
-                                min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
-                                border: 0 ;
-                            }}
-                            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-                                background: none;            /* Ok işaretlerinin görünmemesi için */
-                            }}
-
-                            QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {{
-                                background: none;            /* Ok işaretlerinin görünmemesi için */
-                            }}""")
-        tablo.horizontalHeader().setVisible(False)
-        tablo.verticalHeader().setVisible(False)
-        tablo_max_width=int((MenuPanel.width()-375)/2)-1
-        tablo.setColumnWidth(0, 200)
-        tablo.setColumnWidth(1, tablo_max_width)
-        tablo.setColumnWidth(2, 100)
-        tablo.setColumnWidth(3, tablo_max_width)
-        tablo.setColumnWidth(4, 75)
-        tablo.setFixedSize(MenuPanel.width(),MenuPanel.height()-45)
-        tablo.move(0,35)
+        tablo =self.Create_Table_Set_Items(QTableWidget,header,self.width(),MenuPanel.height()-35,None)
         
         for col in range(len(header)):
-            item = QTableWidgetItem(header[col])
-            item.setTextAlignment(Qt.AlignCenter) 
-            item.setBackground(QColor(self.BORDER_COLOR))
-            item.setFlags(QtCore.Qt.ItemIsEnabled) 
-            tablo.setItem(0,col,item) 
-            tablo.show()
-        row_num=1
-        sql_header = ['person_name','person_mail','year-month','cst_header','_id']
-        for item in sorgu:
-            for i in range(len(sql_header)):
-                if i == len(sql_header)-1:
-                    detail_btn = QPushButton("Detay")
-                    detail_btn.setStyleSheet(self.normal_button)
-                    detail_btn.setProperty("_id",item[sql_header[i]])
-                    detail_btn.clicked.connect(self.Meet_Details)
-                    tablo.setCellWidget(row_num,i,detail_btn)
-                else:
-                    table_item = QTableWidgetItem(str(item[sql_header[i]]))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setFlags(QtCore.Qt.ItemIsEnabled) 
-                    tablo.setItem(row_num,i,table_item)
-            row_num += 1
-
+            if col == 0:
+                item = QTableWidgetItem(header[col])
+                item.setTextAlignment(Qt.AlignCenter) 
+                tablo.setVerticalHeaderItem(0,item)
+            else:
+                self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
+        sql_header=["real_name","ws_name",'frm_name',"person_name","person_mail","cst_header","year-month",""]
+        if menu_id is None or menu_id == 1:
+            for i in range(2):
+                sql_header.pop(0)
+        for db_item in self.conversations.aggregate(data):
+                row = tablo.rowCount()
+                tablo.insertRow(row)
+               
+                for header_item in range(len(sql_header)):
+                    if header_item == 0:
+                        item = QTableWidgetItem(db_item[sql_header[header_item]])
+                        item.setTextAlignment(Qt.AlignCenter) 
+                        tablo.setVerticalHeaderItem(row,item)
+                    elif header_item == len(sql_header)-1:
+                        detail_btn = self.common_items(QPushButton,"detail_btn","Detay",75,29)
+                        detail_btn.setProperty("_id",db_item["_id"])
+                        detail_btn.clicked.connect(self.Meet_Details)
+                        tablo.setCellWidget(row,header_item-1,detail_btn)
+                    else:
+                        self.Create_Table_Set_Items(QTableWidgetItem,db_item[sql_header[header_item]],row,header_item-1,tablo)
+        tablo.setEditTriggers(QTableWidget.NoEditTriggers)        
+        tablo.resizeColumnsToContents()
+        
+        table_menu_lay.addWidget(tablo)
+        btn_menu_lay.addWidget(back_btn,0,Qt.AlignLeft)
+        MenuPanel_lay.addLayout(btn_menu_lay)
+        MenuPanel_lay.addLayout(table_menu_lay)
+        MenuPanel_lay.addSpacing(50)
+        MenuPanel.setLayout(MenuPanel_lay)
         MenuPanel.move(0,37)
         MenuPanel.show()
 
@@ -1991,12 +2198,51 @@ class SuperAdminMenu(QMainWindow):
             meet_text_area.show()
             meet_text_area.setReadOnly(True)
             meet_text_area.setHtml(conversation_text["file_data"])
+            dikey_scroll_area=QScrollArea(Content_Panel)
+            dikey_scroll_area.setStyleSheet(f"""QScrollBar:vertical {{
+                                    width: 5px;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 1;
+                                    background-color:white;
+                                }}
+
+                                QScrollBar::handle:vertical {{
+                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
+                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
+                                    border: 0 ;
+                                }}
+                                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+
+                                QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {{
+                                    background: none;            /* Ok işaretlerinin görünmemesi için */
+                                }}
+                                QScrollBar:horizontal {{
+                                    height: 0;                 /* Kaydırma çubuğunun genişliği */
+                                    margin: 0px 0px 0px 0px; 
+                                    border: 0;
+                                    background-color:white;
+                                }}
+                                QScrollArea{{border:0;}}""")
+            dikey_scroll_area.setFixedSize(Content_Panel.width(),150)
+            dikey_scroll_area.setWidgetResizable(True)
+            todo_area = QWidget(Content_Panel)
+            todo_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            todo_area.setStyleSheet("border:0;")
+            todo_area.setFixedWidth(Content_Panel.width()-10)
+            todo_area_layout = QVBoxLayout(todo_area)
+            for todolist in self.todos.find({"meet_id":button_id}):
+                todo_area_layout.addWidget(self.to_do_template(todolist["item_state"],todolist["item_text"],todolist["reminder_date"],"add_to_do",todolist["_id"]))
+            dikey_scroll_area.setWidget(todo_area)
+            dikey_scroll_area.show()
+            dikey_scroll_area.move(0,550)
         conversation_text=None
         
         MenuPanel.move(0,37)
         MenuPanel.show()
 
-    def frm_based_report_panel(self):
+    def frm_based_report_panel(self,menu_id=None):
         if self.content_child_frame is not None:
             for child in self.content_child_frame.findChildren(QWidget):
                 child.deleteLater()
@@ -2034,18 +2280,19 @@ class SuperAdminMenu(QMainWindow):
                 date_db.addItem("Select Any Date",userData=0)
                 date_db.addItem(str(min_year),userData=int(min_year))
             else:
+                date_db.addItem("Select Any Date",userData=0)
                 date_db.addItem("Tüm Zamanlar",userData=1)
                 for i in range(min_year,max_year+1):
                     date_db.addItem(str(i),userData=int(i)) 
 
-        date_db.currentIndexChanged.connect(self.frm_based_report)
+        date_db.currentIndexChanged.connect(lambda:self.frm_based_report(menu_id))
         yatay_layout.setAlignment(Qt.AlignTop)
         yatay_layout.addWidget(date_db,0,Qt.AlignCenter)
         dikey_layout.addLayout(yatay_layout)
         dikey_layout.addSpacerItem(QSpacerItem(self.contentpanel.width(), self.contentpanel.height()-100, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.content_child_frame.setLayout(dikey_layout)
 
-    def frm_based_report(self):
+    def frm_based_report(self,menu_id=None):
         tablo = self.content_child_frame.findChildren(QTableWidget,"frm_based")
         frame_x = self.contentpanel.width()
         frame_y = self.contentpanel.height()
@@ -2069,11 +2316,6 @@ class SuperAdminMenu(QMainWindow):
                             'path':'$person_name',
                             'preserveNullAndEmptyArrays':True
                         }
-                    },
-                    {
-                        "$match":{
-                            "user_id":int(self.user_id)
-                            }
                     },
                     {
                         "$project": {
@@ -2102,12 +2344,37 @@ class SuperAdminMenu(QMainWindow):
                             "year":1,
                             "month":1,
                             "person_frm_id":1,
-                            "frm_name":"$frm.name"
+                            "frm_name":"$frm.name",
+                            "ws_id":"$frm.workspace_id"
+                        }
+                    },
+                    {
+                        '$lookup':{
+                            'from':'workspace_list',
+                            'localField':'ws_id',
+                            'foreignField': '_id',
+                            'as':'ws_inf'
+                        }
+                    },
+                    {
+                        '$unwind':{
+                            'path':'$ws_inf',
+                            'preserveNullAndEmptyArrays':True
+                        }
+                    },
+                    {
+                        "$project": {
+                            "year":1,
+                            "month":1,
+                            "person_frm_id":1,
+                            "frm_name":1,
+                            "ws_id":1,
+                            "ws_parent":"$ws_inf.parent"
                         }
                     },
                     {
                         "$group":{
-                            "_id":{"year":"$year","month":"$month","person_frm_id":"$person_frm_id","frm_name":"$frm_name"},
+                            "_id":{"year":"$year","month":"$month","person_frm_id":"$person_frm_id","frm_name":"$frm_name","ws_id":"$ws_id","ws_parent":"$ws_parent"},
                             "visit_count":{"$sum":1}
                         }
                     },
@@ -2118,256 +2385,52 @@ class SuperAdminMenu(QMainWindow):
                             "year":"$_id.year",
                             "month":"$_id.month",
                             "visit_count":1,
+                            "ws_id":"$_id.ws_id",
+                            "ws_parent":"$_id.ws_parent",
                             "_id":0
                         }
                     },{"$sort":{"frm_id":1}}]
+            if menu_id is None:
+                sql.insert(0,{"$match":{"user_id":self.user_id}})
             if date > 1 :
                 sql.append({"$match":{"year":int(date)}})
-            sorgu = self.conversations.aggregate(sql).to_list(None)
-            frm_ids = []
-            for i in sorgu:
-                if i['frm_id'] not in frm_ids:
-                    frm_ids.append(int(i["frm_id"]))
-            row= len(frm_ids)+1
+            if self.user_perm == "Müdür":
+                sql.append({"$match":{"$or":[{"ws_id":self.user_workspace_id},{"ws_parent":self.user_workspace_id}]}})
             header = ['Firma Adı',"Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
-            tablo = CustomTableWidget(row,len(header),self.content_child_frame)
+            tablo =self.Create_Table_Set_Items(QTableWidget,header,frame_x,frame_y-100,self.content_child_frame)
+            tablo.setEditTriggers(QTableWidget.NoEditTriggers) 
             tablo.setObjectName("frm_based")
-            tablo.setStyleSheet(f"""QTableWidget{{
-                                border-radius:0;
-                                color:{self.FONT_COLOR};
-                                background-color: {self.PANEL_COLOR};
-                                }}
-                                QScrollBar:horizontal {{
-                                    height: 5px;                 /* Kaydırma çubuğunun genişliği */
-                                    margin: 0px 0px 0px 0px; 
-                                    border: 1;
-                                    background-color:white;
-                                }}
-
-                                QScrollBar::handle:horizontal {{
-                                    background-color: {self.OS_RED};         /* Kaydırıcı (handle) rengi */
-                                    min-height: 20px;            /* Kaydırıcının minimum yüksekliği */
-                                    border: 0 ;
-                                }}
-                                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
-                                    background: none;            /* Ok işaretlerinin görünmemesi için */
-                                }}
-
-                                QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {{
-                                    background: none;            /* Ok işaretlerinin görünmemesi için */
-                                }}""")
-            tablo.horizontalHeader().setVisible(False)
-            tablo.verticalHeader().setVisible(False)
-            tablo.setColumnWidth(0, 200)
-            for i in range(12):
-                tablo.setColumnWidth(i+1, 75)
-            tablo.setFixedSize(frame_x,frame_y-110)
-            tablo.move(0,45)
-            tablo.setEditTriggers(QTableWidget.NoEditTriggers)
-
+            tablo.move(0,40)
+            for col in range(tablo.columnCount()):
+                tablo.setColumnWidth(col, 75)
             for col in range(len(header)):
-                item = QTableWidgetItem(header[col])
-                item.setTextAlignment(Qt.AlignCenter) 
-                item.setBackground(QColor(self.BORDER_COLOR))
-                tablo.setItem(0,col,item) 
-                tablo.show()
-            row_num=1
-            row_id = 0
-            for item in sorgu:
-                if row_id == item["frm_id"]:
-                    row_num -= 1
-                    past_item = tablo.item(row_num,int(item['month']))
-                    if past_item != None:
-                        visit_num = int(past_item.text()) + int(item['visit_count'])
-                        table_item = QTableWidgetItem(str(visit_num))
-                    else:
-                        table_item = QTableWidgetItem(str(item['visit_count']))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setBackground(QColor(self.BORDER_COLOR))
-                    tablo.setItem(row_num,int(item['month']),table_item)
+                if col == 0:
+                    item = QTableWidgetItem(header[col])
+                    item.setTextAlignment(Qt.AlignCenter) 
+                    tablo.setVerticalHeaderItem(0,item)
                 else:
-                    table_item = QTableWidgetItem(str(item['frm_name']))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setBackground(QColor(self.BORDER_COLOR))
-                    tablo.setItem(row_num,0,table_item)
-                    tablo.item(row_num,0).setData(Qt.UserRole,item["frm_id"])
+                    self.Create_Table_Set_Items(QTableWidgetItem,header[col],0,col-1,tablo)
+            table_frm_id = None
+            row = tablo.rowCount()
+            for sql_item in self.conversations.aggregate(sql): 
+                if sql_item["frm_id"] != table_frm_id:
+                    row = tablo.rowCount()
+                    tablo.insertRow(row)
+                    item = QTableWidgetItem(sql_item["frm_name"])
+                    item.setTextAlignment(Qt.AlignCenter)
+                    item.setData(Qt.UserRole, sql_item["frm_id"])
+                    tablo.setVerticalHeaderItem(row,item)
+                    table_frm_id = sql_item["frm_id"] 
+                past_item = tablo.item(row,sql_item['month']-1)
+                if past_item is not None:
+                    visit_num = int(past_item.text()) + sql_item['visit_count']
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(visit_num),row,sql_item["month"]-1,tablo,True)
+                else:
+                    self.Create_Table_Set_Items(QTableWidgetItem,str(sql_item["visit_count"]),row,sql_item["month"]-1,tablo,True)
+            rp = Frm_Based_Report_Detail(date,tablo,menu_id,self)
+            tablo.verticalHeader().sectionDoubleClicked.connect(rp.click_vheader)
+            tablo.cellDoubleClicked.connect(rp.click_table)
 
-                    table_item = QTableWidgetItem(str(item['visit_count']))
-                    table_item.setTextAlignment(Qt.AlignCenter) 
-                    table_item.setBackground(QColor(self.BORDER_COLOR))
-                    tablo.setItem(row_num,int(item['month']),table_item)
-                row_num += 1
-                row_id = item["frm_id"]
-            tablo.cellDoubleClicked.connect(self.frm_based_report_detail_click)
-   
-    def frm_based_report_detail_click(self,row,col):
-        tablo = self.content_child_frame.findChildren(QTableWidget,"frm_based")[0]
-        max_row = tablo.rowCount()
-        date = self.content_child_frame.findChildren(QComboBox,"date")[0]
-        date = date.itemData(date.currentIndex())
-        if row == 0: # Başlık kısmına tıklandı ise    
-            if col > 1: #başlık kısmında aylardan birine tıklandı ise
-                visit_count = False
-                for i in range(1,max_row):
-                    item = tablo.item(i,col)
-                    if item != None:
-                        visit_count = True
-                        break
-                if visit_count: # Eğer o ay içerisinde herhangi bir ziyaret varsa panelde detayları gösterecek
-                    date = self.content_child_frame.findChildren(QComboBox,"date")[0]
-                    date = date.itemData(date.currentIndex())
-                    sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$month": "$create_date" }, col]
-                                 }
-                                }
-                        }
-                        ]
-                    if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                    data = self.conversations.aggregate(sql)
-                    self.ReportDetailsTable(data)
-        else:# Firma tablosuna tıklandıysa
-            if col == 0:#Firmaya Tıklandıysa
-                frm_id = tablo.item(row,col)
-                frm_id = frm_id.data(Qt.UserRole)
-                sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "person_frm_id":int(frm_id)
-                                }
-                        }
-                        ]
-                if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                data = self.conversations.aggregate(sql)
-                self.ReportDetailsTable(data)#Kişiye ait visitleri detaylarını gösteren pencereyi açacak
-            elif col > 1:# Firmanın belli bir ayına tıklandıysa
-                item =  tablo.item(row,col)
-                if item != None:
-                    frm_id = tablo.item(row,0)
-                    frm_id = frm_id.data(Qt.UserRole)
-                    sql =[{
-                            '$lookup':{
-                                'from':'person_list',
-                                'localField':'person_id',
-                                'foreignField': '_id',
-                                'as':'person_name'
-                            }
-                        },
-                        {
-                            '$unwind':{
-                                'path':'$person_name',
-                                'preserveNullAndEmptyArrays':True
-                            }
-                        },
-                        {
-                            "$match":{
-                                "user_id":int(self.user_id)
-                                }
-                        },
-                        {
-                            "$project": {
-                                "person_id": 1, 
-                                "year-month":{"$dateToString":{"format":"%Y-%m-%d","date":"$create_date"}},
-                                "create_date":1,
-                                "person_name":"$person_name.fullname",
-                                "person_mail":"$person_name.mail",
-                                "person_frm_id":"$person_name.frm_id",
-                                "cst_header":1
-                            }
-                        },
-                        {
-                            "$match":{
-                                "person_frm_id":int(frm_id),
-                                "$expr": {
-                                 "$eq": [{ "$month": "$create_date" }, col]
-                                 }
-                                }
-                        }
-                        ]
-                    if date > 1 :
-                        sql.append({
-                            "$match":{
-                                "$expr": {
-                                 "$eq": [{ "$year": "$create_date" }, date]
-                                 }
-                                }
-                        })
-                    data = self.conversations.aggregate(sql)
-                    self.ReportDetailsTable(data)
 # ---------------------------------------------------------------------------- Raporlar ---------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------ Kişiler Paneli -------------------------------------------------------------------------------------------
@@ -3207,12 +3270,12 @@ class SuperAdminMenu(QMainWindow):
         workspace_id = self.content_child_frame.findChildren(QComboBox,"workspace_list")[0]
         workspace_id = int(workspace_id.itemData(workspace_id.currentIndex()))  
         perm = self.content_child_frame.findChildren(QComboBox,"item_panel_perm_list")[0].currentText()
-        user_mail = self.content_child_frame.findChildren(QComboBox,"user_item_mail")[0].currentText()
+        user_mail = self.content_child_frame.findChildren(QLineEdit,"user_item_mail")[0].text()
         mail_state=True
-        if user_mail is not None:
+        if user_mail != "":
             mail_state = self.Data_Control_Func(user_mail,"Mail")
-        else:
-            self.bildirim("Lütfen geçerli bir mail adresini giriniz!")
+            if mail_state == False:
+                self.bildirim("Lütfen geçerli bir mail adresini giriniz!")
         if self.Data_Control_Func(user_fullname,"Space") and mail_state:
             if workspace_id != 0:
                 if perm in ["Admin","Müdür","Personel","Gereksiz","Yetkisiz"]:
@@ -3551,6 +3614,6 @@ if __name__ == "__main__":
     #     else:
     #         window = SuperAdminMenu(THEME_ID,user,0,0,"Yetkisiz")
     
-    window = SuperAdminMenu(1,"sistemdestek",1,1,"Admin")
+    window = SuperAdminMenu(0,"sistemdestek",1,1,"Admin")
     window.show()
     sys.exit(app.exec())
