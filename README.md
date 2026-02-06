@@ -68,28 +68,28 @@ Bu yapı sayesinde her kullanıcı yalnızca kendi yetki alanındaki verilere er
 Aşağıdaki alanlara proje görsellerini ekleyebilirsin:
 
 1️⃣ **Toplantılarım Sekmesi**  
-![Toplantılarım](images/toplantilarim.png)
+<img src="images/toplantilarim.PNG" width="400" />
 
 2️⃣ **Boş Menü**  
-![Bos Menu](images/bos-menu.png)
+<img src="images/bos-menu.PNG" width="400" />
 
 3️⃣ **Yetkisiz Giriş Ekranı**  
-![Yetkisiz](images/yetkisiz.png)
+<img src="images/yetkisiz.PNG" width="400" />
 
 4️⃣ **Personel Raporları – Firma Bazlı Menü**  
-![Firma Bazli](images/firma-rapor.png)
+<img src="images/firma-rapor.PNG" width="400" />
 
 5️⃣ **Personel Raporları – Personel Bazlı Menü**  
-![Personel Bazli](images/personel-rapor.png)
+<img src="images/personel-rapor.PNG" width="400" />
 
 6️⃣ **Toplantılarım – Yapılacaklar Menüsü**  
-![Yapilacaklar](images/yapilacaklar.png)
+<img src="images/yapilacaklar.PNG" width="400" />
 
 7️⃣ **Admin Menü**  
-![Admin](images/admin-menu.png)
+<img src="images/admin-menu.PNG" width="400" />
 
 8️⃣ **Admin Menü – İşlem Örneği**  
-![Admin Islem](images/admin-islem.png)
+<img src="images/admin-islem.PNG" width="400" />
 
 ---
 
@@ -160,28 +160,28 @@ This structure ensures that each user can access only authorized information, im
 Place your screenshots in the sections below:
 
 1️⃣ **My Meetings Tab**  
-![My Meetings](images/toplantilarim.png)
+<img src="images/toplantilarim.PNG" width="400" />
 
 2️⃣ **Empty Menu**  
-![Empty Menu](images/bos-menu.png)
+<img src="images/bos-menu.PNG" width="400" />
 
 3️⃣ **Unauthorized Access Screen**  
-![Unauthorized](images/yetkisiz.png)
+<img src="images/yetkisiz.PNG" width="400" />
 
 4️⃣ **Personnel Reports – Company Menu**  
-![Company Reports](images/firma-rapor.png)
+<img src="images/firma-rapor.PNG" width="400" />
 
 5️⃣ **Personnel Reports – Employee Menu**  
-![Employee Reports](images/personel-rapor.png)
+<img src="images/personel-rapor.PNG" width="400" />
 
 6️⃣ **My Meetings – To-Do Menu**  
-![To Do](images/yapilacaklar.png)
+<img src="images/yapilacaklar.PNG" width="400" />
 
 7️⃣ **Admin Menu**  
-![Admin](images/admin-menu.png)
+<img src="images/admin-menu.PNG" width="400" />
 
 8️⃣ **Admin Menu – Action Example**  
-![Admin Action](images/admin-islem.png)
+<img src="images/admin-islem.PNG" width="400" />
 
 ---
 
